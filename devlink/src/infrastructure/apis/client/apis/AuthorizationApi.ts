@@ -17,16 +17,23 @@ import * as runtime from '../runtime';
 import type {
   LoginRecord,
   LoginResponseRecordRequestResponse,
+  UserAddRecord,
 } from '../models/index';
 import {
     LoginRecordFromJSON,
     LoginRecordToJSON,
     LoginResponseRecordRequestResponseFromJSON,
     LoginResponseRecordRequestResponseToJSON,
+    UserAddRecordFromJSON,
+    UserAddRecordToJSON,
 } from '../models/index';
 
 export interface ApiAuthorizationLoginPostRequest {
     loginRecord?: LoginRecord;
+}
+
+export interface ApiAuthorizationRegisterPostRequest {
+    userAddRecord?: UserAddRecord;
 }
 
 /**
@@ -66,6 +73,41 @@ export class AuthorizationApi extends runtime.BaseAPI {
      */
     async apiAuthorizationLoginPost(requestParameters: ApiAuthorizationLoginPostRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LoginResponseRecordRequestResponse> {
         const response = await this.apiAuthorizationLoginPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async apiAuthorizationRegisterPostRaw(requestParameters: ApiAuthorizationRegisterPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<LoginResponseRecordRequestResponse>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/Authorization/Register`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: UserAddRecordToJSON(requestParameters['userAddRecord']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => LoginResponseRecordRequestResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiAuthorizationRegisterPost(requestParameters: ApiAuthorizationRegisterPostRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LoginResponseRecordRequestResponse> {
+        const response = await this.apiAuthorizationRegisterPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

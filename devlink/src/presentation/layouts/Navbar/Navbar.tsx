@@ -67,18 +67,22 @@ export function Navbar() {
               </>
             )}
 
-            <NavigationMenuItem className="ml-auto">
+            <NavigationMenuItem className="ml-auto flex gap-1">
               {!loggedIn ? (
-                <NavigationMenuLink asChild>
-                  <Link to={AppRoute.Login} className={navigationMenuTriggerStyle()}>
-                    Login
-                  </Link>
-                </NavigationMenuLink>
+                <>
+                  <NavigationMenuLink asChild>
+                    <Link to={AppRoute.Login} className={navigationMenuTriggerStyle()}>
+                      Login
+                    </Link>
+                  </NavigationMenuLink>
+                  <NavigationMenuLink asChild>
+                    <Link to={AppRoute.Register} className={navigationMenuTriggerStyle()}>
+                      Register
+                    </Link>
+                  </NavigationMenuLink>
+                </>
               ) : (
-                <button
-                  onClick={logout}
-                  className={navigationMenuTriggerStyle()}
-                >
+                <button onClick={logout} className={navigationMenuTriggerStyle()}>
                   Logout
                 </button>
               )}
