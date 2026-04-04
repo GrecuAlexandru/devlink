@@ -24,8 +24,8 @@ export function RegisterForm({ className }: React.ComponentProps<"div">) {
   const { state, actions, computed } = useRegisterFormController();
 
   return (
-    <div className={cn("flex flex-col gap-6", className)}>
-      <Card className="w-full max-w-sm">
+    <div className={cn("flex flex-col gap-6 w-full max-w-sm", className)}>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Create an account</CardTitle>
           <CardDescription>

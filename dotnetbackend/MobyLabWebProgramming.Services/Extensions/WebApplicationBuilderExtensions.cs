@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,9 +23,9 @@ public static class WebApplicationBuilderExtensions
     {
         builder.Services.Configure<DatabaseConfiguration>(builder.Configuration.GetSection(nameof(DatabaseConfiguration)));
         builder.Services.AddDbContext<WebAppDatabaseContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString(WebAppDatabaseConnectionKey), // This gets the connection string from ConnectionStrings.WebAppDatabase in appsettings.json.
-                o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery)
-                    .CommandTimeout((int)TimeSpan.FromMinutes(15).TotalSeconds)));
+        options.UseNpgsql(builder.Configuration.GetConnectionString(WebAppDatabaseConnectionKey), // This gets the connection string from ConnectionStrings.WebAppDatabase in appsettings.json.
+        o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery)
+        .CommandTimeout((int)TimeSpan.FromMinutes(15).TotalSeconds)));
         builder.Services.AddScoped<IRepository<WebAppDatabaseContext>, Repository<WebAppDatabaseContext>>();
 
         return builder;
@@ -40,10 +40,11 @@ public static class WebApplicationBuilderExtensions
         builder.Services.Configure<FileStorageConfiguration>(builder.Configuration.GetSection(nameof(FileStorageConfiguration)));
         builder.Services.Configure<MailConfiguration>(builder.Configuration.GetSection(nameof(MailConfiguration)));
         builder.Services
-            .AddScoped<IUserService, UserService>()
-            .AddScoped<ILoginService, LoginService>()
-            .AddScoped<IFileRepository, FileRepository>()
-            .AddScoped<IMailService, MailService>();
+        .AddScoped<IUserService, UserService>()
+        .AddScoped<ICompanyService, CompanyService>()
+        .AddScoped<ILoginService, LoginService>()
+        .AddScoped<IFileRepository, FileRepository>()
+        .AddScoped<IMailService, MailService>();
 
         return builder;
     }

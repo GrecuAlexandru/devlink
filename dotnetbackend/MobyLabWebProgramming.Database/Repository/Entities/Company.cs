@@ -10,4 +10,7 @@ public class Company : BaseEntity
     public string? Description { get; set; }
 
     public ICollection<JobPost> JobPosts { get; set; } = null!;
+
+    // Company owner
+    public ICollection<User> Users { get; set; } = null!;
 }

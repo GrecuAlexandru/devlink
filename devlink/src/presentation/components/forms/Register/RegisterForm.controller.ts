@@ -7,6 +7,8 @@ import { useAppDispatch } from "@/application/store";
 import { setToken } from "@/application/state-slices";
 import { toast } from "react-toastify";
 import { useAppRouter } from "@/infrastructure/hooks/useAppRouter";
+import { AppRoute } from "@/routes";
+import { jwtDecode } from "jwt-decode";
 
 export type RegisterFormModel = {
   email: string;
@@ -14,6 +16,16 @@ export type RegisterFormModel = {
   confirmPassword: string;
   name: string;
   userType: "User" | "CompanyOwner";
+};
+
+const getRoleFromToken = (token: string): string | undefined => {
+  const decoded = jwtDecode<Record<string, string>>(token);
+  for (const key in decoded) {
+    if (key.endsWith("/role") || key === "role") {
+      return decoded[key];
+    }
+  }
+  return undefined;
 };
 
 const useInitRegisterForm = () => {
@@ -73,7 +85,7 @@ export type RegisterFormController = {
 
 export const useRegisterFormController = (): RegisterFormController => {
   const { defaultValues, resolver } = useInitRegisterForm();
-  const { redirectToLogin } = useAppRouter();
+  const { navigate } = useAppRouter();
   const { mutateAsync: registerUser, status } = useRegister();
   const dispatch = useAppDispatch();
 
@@ -85,17 +97,22 @@ export const useRegisterFormController = (): RegisterFormController => {
           if (result.response?.token) {
             dispatch(setToken(result.response.token));
             toast.success("Account created successfully!");
-            redirectToLogin();
+            const role = getRoleFromToken(result.response.token);
+            if (role === "CompanyAdmin") {
+              navigate(AppRoute.CreateCompany);
+            } else {
+              navigate(AppRoute.Index);
+            }
           } else {
             toast.success("Account created! Please login.");
-            redirectToLogin();
+            navigate(AppRoute.Login);
           }
         })
         .catch((error) => {
           toast.error(error?.message || "Registration failed!");
         });
     },
-    [registerUser, redirectToLogin, dispatch]
+    [registerUser, navigate, dispatch]
   );
 
   const {

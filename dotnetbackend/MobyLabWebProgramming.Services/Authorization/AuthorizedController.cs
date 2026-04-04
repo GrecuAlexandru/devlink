@@ -7,18 +7,11 @@ using MobyLabWebProgramming.Services.DataTransferObjects;
 
 namespace MobyLabWebProgramming.Services.Authorization;
 
-/// <summary>
-/// This abstract class is used as a base class for controllers that need to get current information about the user from the database.
-/// </summary>
 public abstract class AuthorizedController(ILogger logger, IUserService userService) : BaseResponseController(logger)
 {
     private UserClaims? _userClaims;
     protected readonly IUserService UserService = userService;
 
-    /// <summary>
-    /// This method extracts the claims from the JWT into an object.
-    /// It also caches the object if used a second time.
-    /// </summary>
     protected UserClaims ExtractClaims()
     {
         if (_userClaims != null)
@@ -36,8 +29,5 @@ public abstract class AuthorizedController(ILogger logger, IUserService userServ
         return _userClaims;
     }
 
-    /// <summary>
-    /// This method also gets the currently logged user information from the database to provide more information to authorization verifications.
-    /// </summary>
     protected Task<ServiceResponse<UserRecord>> GetCurrentUser() => UserService.GetUser(ExtractClaims().Id);
 }

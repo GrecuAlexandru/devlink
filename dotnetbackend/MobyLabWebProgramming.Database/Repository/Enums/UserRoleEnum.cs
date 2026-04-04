@@ -7,5 +7,6 @@ public enum UserRoleEnum
 {
     Admin,
     Personnel,
-    Client
+    Client,
+    CompanyAdmin
 }

@@ -19,4 +19,8 @@ public class User : BaseEntity
 
     // For jobs
     public ICollection<Application> Applications { get; set; } = null!;
+
+    // For company owners
+    public Guid? CompanyId { get; set; }
+    public Company? Company { get; set; }
 }

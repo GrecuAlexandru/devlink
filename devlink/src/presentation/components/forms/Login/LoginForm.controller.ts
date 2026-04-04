@@ -7,10 +7,22 @@ import { useAppDispatch } from "@/application/store";
 import { setToken } from "@/application/state-slices";
 import { toast } from "react-toastify";
 import { useAppRouter } from "@/infrastructure/hooks/useAppRouter";
+import { jwtDecode } from "jwt-decode";
+import { AppRoute } from "@/routes";
 
 export type LoginFormModel = {
   email: string;
   password: string;
+};
+
+const getRoleFromToken = (token: string): string | undefined => {
+  const decoded = jwtDecode<Record<string, string>>(token);
+  for (const key in decoded) {
+    if (key.endsWith("/role") || key === "role") {
+      return decoded[key];
+    }
+  }
+  return undefined;
 };
 
 const useInitLoginForm = () => {
@@ -52,7 +64,7 @@ export type LoginFormController = {
 
 export const useLoginFormController = (): LoginFormController => {
   const { defaultValues, resolver } = useInitLoginForm();
-  const { redirectToHome } = useAppRouter();
+  const { navigate } = useAppRouter();
   const { mutateAsync: login, status } = useLogin();
   const dispatch = useAppDispatch();
 
@@ -61,9 +73,17 @@ export const useLoginFormController = (): LoginFormController => {
       login(data).then((result) => {
         dispatch(setToken(result.response?.token ?? ""));
         toast.success("You logged in successfully!");
-        redirectToHome();
+        const role = getRoleFromToken(result.response?.token ?? "");
+        if (role === "CompanyAdmin") {
+          navigate(AppRoute.CreateCompany);
+        } else {
+          navigate(AppRoute.Index);
+        }
+      })
+      .catch((error) => {
+        toast.error(error?.response?.data?.message || "Invalid email or password!");
       }),
-    [login, redirectToHome, dispatch]
+    [login, navigate, dispatch]
   );
 
   const {
