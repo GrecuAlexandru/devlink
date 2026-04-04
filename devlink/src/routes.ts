@@ -9,4 +9,5 @@ export enum AppRoute {
   CreateCompany = "/create-company",
   Company = "/company",
   Profile = "/profile",
+  People = "/people",
 }

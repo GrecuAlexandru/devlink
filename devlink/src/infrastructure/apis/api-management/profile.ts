@@ -67,3 +67,49 @@ export const useUpdateUser = () => {
     },
   });
 };
+
+export const useGetUsers = (page: number = 1, search: string = "") => {
+  return useQuery({
+    queryKey: ["users", page, search],
+    queryFn: async () => {
+      const token = localStorage.getItem("token");
+      const params = new URLSearchParams({
+        Page: page.toString(),
+        PageSize: "20",
+        ...(search && { Search: search }),
+      });
+      const response = await fetch(`${basePath}/api/User/GetPage?${params}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch users");
+      }
+
+      return response.json();
+    },
+  });
+};
+
+export const useGetUserProfile = (userId: string) => {
+  return useQuery({
+    queryKey: ["userProfile", userId],
+    queryFn: async () => {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${basePath}/api/UserProfile/GetProfile/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user profile");
+      }
+
+      return response.json();
+    },
+    enabled: !!userId,
+  });
+};

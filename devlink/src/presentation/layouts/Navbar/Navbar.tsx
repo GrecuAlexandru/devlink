@@ -3,6 +3,7 @@ import { AppRoute } from "@/routes";
 import { useAppDispatch, useAppSelector } from "@/application/store";
 import { resetProfile } from "@/application/state-slices";
 import { useAppRouter } from "@/infrastructure/hooks/useAppRouter";
+import { useOwnUser } from "@/infrastructure/hooks/useOwnUser";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -15,6 +16,8 @@ export function Navbar() {
   const { loggedIn } = useAppSelector((x) => x.profileReducer);
   const dispatch = useAppDispatch();
   const { redirectToHome } = useAppRouter();
+  const user = useOwnUser();
+  const isCompanyAdmin = user?.role === "CompanyAdmin";
 
   const logout = () => {
     dispatch(resetProfile());
@@ -22,7 +25,7 @@ export function Navbar() {
   };
 
   return (
-    <div className="w-full border-b">
+    <div className="w-full border-b bg-background">
       <div className="mx-auto max-w-7xl px-4">
         <NavigationMenu className="h-14">
           <NavigationMenuList>
@@ -52,18 +55,20 @@ export function Navbar() {
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
-                    <Link to={AppRoute.Applications} className={navigationMenuTriggerStyle()}>
-                      Applications
+                    <Link to={AppRoute.People} className={navigationMenuTriggerStyle()}>
+                      People
                     </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link to={AppRoute.Feedback} className={navigationMenuTriggerStyle()}>
-                      Feedback
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
+                {isCompanyAdmin && (
+                  <NavigationMenuItem>
+                    <NavigationMenuLink asChild>
+                      <Link to={AppRoute.Company} className={navigationMenuTriggerStyle()}>
+                        Company
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                )}
               </>
             )}
 
@@ -82,9 +87,16 @@ export function Navbar() {
                   </NavigationMenuLink>
                 </>
               ) : (
-                <button onClick={logout} className={navigationMenuTriggerStyle()}>
-                  Logout
-                </button>
+                <>
+                  <NavigationMenuLink asChild>
+                    <Link to={AppRoute.Profile} className={navigationMenuTriggerStyle()}>
+                      Profile
+                    </Link>
+                  </NavigationMenuLink>
+                  <button onClick={logout} className={navigationMenuTriggerStyle()}>
+                    Logout
+                  </button>
+                </>
               )}
             </NavigationMenuItem>
           </NavigationMenuList>
