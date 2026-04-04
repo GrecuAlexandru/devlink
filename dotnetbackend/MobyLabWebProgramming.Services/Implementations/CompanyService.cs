@@ -83,7 +83,8 @@ public class CompanyService(IRepository<WebAppDatabaseContext> repository) : ICo
             return ServiceResponse.FromError(CommonErrors.CompanyNotFound);
         }
 
-        if (requestingUser.Role != UserRoleEnum.Admin && entity.Users.All(u => u.Id != requestingUser.Id))
+        var userCompany = await repository.GetAsync(new CompanyByUserSpec(requestingUser.Id), cancellationToken);
+        if (requestingUser.Role != UserRoleEnum.Admin && (userCompany == null || userCompany.Id != company.Id))
         {
             return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "Only the company owner or admin can update the company!", ErrorCodes.CannotUpdate));
         }
@@ -107,7 +108,8 @@ public class CompanyService(IRepository<WebAppDatabaseContext> repository) : ICo
             return ServiceResponse.FromError(CommonErrors.CompanyNotFound);
         }
 
-        if (requestingUser.Role != UserRoleEnum.Admin && entity.Users.All(u => u.Id != requestingUser.Id))
+        var userCompany = await repository.GetAsync(new CompanyByUserSpec(requestingUser.Id), cancellationToken);
+        if (requestingUser.Role != UserRoleEnum.Admin && (userCompany == null || userCompany.Id != id))
         {
             return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "Only the company owner or admin can delete the company!", ErrorCodes.CannotDelete));
         }

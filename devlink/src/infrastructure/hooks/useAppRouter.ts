@@ -6,18 +6,13 @@ export const useAppRouter = () => {
   const navigate = useNavigate();
 
   const redirectToHome = useCallback(() => navigate(AppRoute.Index), [navigate]);
-
   const redirectToLogin = useCallback(() => navigate(AppRoute.Login), [navigate]);
-
   const redirectToFeed = useCallback(() => navigate(AppRoute.Feed), [navigate]);
-
   const redirectToJobs = useCallback(() => navigate(AppRoute.Jobs), [navigate]);
-
   const redirectToApplications = useCallback(() => navigate(AppRoute.Applications), [navigate]);
-
   const redirectToFeedback = useCallback(() => navigate(AppRoute.Feedback), [navigate]);
-
   const redirectToCreateCompany = useCallback(() => navigate(AppRoute.CreateCompany), [navigate]);
+  const redirectToCompany = useCallback(() => navigate(AppRoute.Company), [navigate]);
 
   return {
     redirectToHome,
@@ -27,6 +22,7 @@ export const useAppRouter = () => {
     redirectToApplications,
     redirectToFeedback,
     redirectToCreateCompany,
+    redirectToCompany,
     navigate,
   };
 };

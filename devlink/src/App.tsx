@@ -7,6 +7,7 @@ import { JobsPage } from "@/presentation/pages/JobsPage";
 import { ApplicationsPage } from "@/presentation/pages/ApplicationsPage";
 import { FeedbackPage } from "@/presentation/pages/FeedbackPage";
 import { CreateCompanyPage } from "@/presentation/pages/CreateCompanyPage";
+import { CompanyPage } from "@/presentation/pages/CompanyPage";
 import { Navbar } from "@/presentation/layouts/Navbar";
 import { Route, Routes } from "react-router-dom";
 import { AppRoute } from "@/routes";
@@ -21,14 +22,15 @@ function App() {
       <Navbar />
       <main>
         <Routes>
-        <Route path={AppRoute.Index} element={<HomePage />} />
-        <Route path={AppRoute.Login} element={<LoginPage />} />
-        <Route path={AppRoute.Register} element={<RegisterPage />} />
-        {loggedIn && <Route path={AppRoute.Feed} element={<FeedPage />} />}
-        {loggedIn && <Route path={AppRoute.Jobs} element={<JobsPage />} />}
-        {loggedIn && <Route path={AppRoute.Applications} element={<ApplicationsPage />} />}
-        {loggedIn && <Route path={AppRoute.Feedback} element={<FeedbackPage />} />}
-        <Route path={AppRoute.CreateCompany} element={<CreateCompanyPage />} />
+          <Route path={AppRoute.Index} element={<HomePage />} />
+          <Route path={AppRoute.Login} element={<LoginPage />} />
+          <Route path={AppRoute.Register} element={<RegisterPage />} />
+          {loggedIn && <Route path={AppRoute.Feed} element={<FeedPage />} />}
+          {loggedIn && <Route path={AppRoute.Jobs} element={<JobsPage />} />}
+          {loggedIn && <Route path={AppRoute.Applications} element={<ApplicationsPage />} />}
+          {loggedIn && <Route path={AppRoute.Feedback} element={<FeedbackPage />} />}
+          {loggedIn && <Route path={AppRoute.Company} element={<CompanyPage />} />}
+          <Route path={AppRoute.CreateCompany} element={<CreateCompanyPage />} />
         </Routes>
       </main>
     </div>

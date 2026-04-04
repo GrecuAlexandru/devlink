@@ -7,4 +7,5 @@ export enum AppRoute {
   Applications = "/applications",
   Feedback = "/feedback",
   CreateCompany = "/create-company",
+  Company = "/company",
 }

@@ -1,10 +1,10 @@
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 const basePath = import.meta.env.VITE_APP_API_BASE_URL || "http://localhost:5000";
 
 export const useCreateCompany = () => {
   return useMutation({
-    mutationFn: async (data: { name: string; industry: string; website?: string }) => {
+    mutationFn: async (data: { name: string; industry: string; website?: string; description?: string }) => {
       const token = localStorage.getItem("token");
       const response = await fetch(`${basePath}/api/Company/Add`, {
         method: "POST",
@@ -18,6 +18,49 @@ export const useCreateCompany = () => {
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.errorMessage?.message || "Failed to create company");
+      }
+
+      return response.json();
+    },
+  });
+};
+
+export const useGetMyCompany = () => {
+  return useQuery({
+    queryKey: ["myCompany"],
+    queryFn: async () => {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${basePath}/api/Company/GetMyCompany`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch company");
+      }
+
+      return response.json();
+    },
+  });
+};
+
+export const useUpdateCompany = () => {
+  return useMutation({
+    mutationFn: async (data: { id: string; name?: string; industry?: string; website?: string; description?: string }) => {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${basePath}/api/Company/Update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.errorMessage?.message || "Failed to update company");
       }
 
       return response.json();
