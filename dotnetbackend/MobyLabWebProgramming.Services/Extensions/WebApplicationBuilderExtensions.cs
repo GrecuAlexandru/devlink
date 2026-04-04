@@ -40,11 +40,12 @@ public static class WebApplicationBuilderExtensions
         builder.Services.Configure<FileStorageConfiguration>(builder.Configuration.GetSection(nameof(FileStorageConfiguration)));
         builder.Services.Configure<MailConfiguration>(builder.Configuration.GetSection(nameof(MailConfiguration)));
         builder.Services
-        .AddScoped<IUserService, UserService>()
-        .AddScoped<ICompanyService, CompanyService>()
-        .AddScoped<ILoginService, LoginService>()
-        .AddScoped<IFileRepository, FileRepository>()
-        .AddScoped<IMailService, MailService>();
+            .AddScoped<IUserService, UserService>()
+            .AddScoped<ICompanyService, CompanyService>()
+            .AddScoped<IUserProfileService, UserProfileService>()
+            .AddScoped<ILoginService, LoginService>()
+            .AddScoped<IFileRepository, FileRepository>()
+            .AddScoped<IMailService, MailService>();
 
         return builder;
     }

@@ -1,9 +1,3 @@
 namespace MobyLabWebProgramming.Services.DataTransferObjects;
 
-public class UserProfileUpdateRecord
-{
-    public string? Bio { get; set; }
-    public string? ProfilePictureUrl { get; set; }
-    public string? LinkedInUrl { get; set; }
-    public string? GitHubUrl { get; set; }
-}
+public record UserProfileUpdateRecord(Guid Id, string? Bio = null, string? ProfilePictureUrl = null, string? LinkedInUrl = null, string? GitHubUrl = null);
