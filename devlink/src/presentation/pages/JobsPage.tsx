@@ -30,6 +30,8 @@ type ApplyFormModel = {
   expectedSalary?: string;
 };
 
+const JOBS_PAGE_SIZE = 6;
+
 export const JobsPage = memo(() => {
   const user = useOwnUser();
   const isCompanyMember = user?.role === "CompanyAdmin" || user?.role === "Recruiter";
@@ -47,9 +49,32 @@ const CompanyJobsView = () => {
   const [editingJob, setEditingJob] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
   const user = useOwnUser();
   const isCompanyAdmin = user?.role === "CompanyAdmin";
-  const isCompanyMember = user?.role === "CompanyAdmin" || user?.role === "Recruiter";
+
+  const filteredJobs = jobs.filter((job: { title?: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string }) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+
+    return (
+      job.title?.toLowerCase().includes(term) ||
+      job.description?.toLowerCase().includes(term) ||
+      job.location?.toLowerCase().includes(term) ||
+      job.salaryRange?.toLowerCase().includes(term) ||
+      job.level?.toLowerCase().includes(term) ||
+      job.type?.toLowerCase().includes(term)
+    );
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / JOBS_PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedJobs = filteredJobs.slice((currentPage - 1) * JOBS_PAGE_SIZE, currentPage * JOBS_PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, jobs.length]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -83,69 +108,101 @@ const CompanyJobsView = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {jobs.map((job: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; isRecruiterPosition?: boolean }) => (
-            <Card key={job.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle>{job.title}</CardTitle>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {job.location && (
-                        <Badge variant="secondary" className="gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {job.location}
-                        </Badge>
-                      )}
-                      {job.salaryRange && (
-                        <Badge variant="secondary" className="gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          {job.salaryRange}
-                        </Badge>
-                      )}
-                      {job.level && (
-                        <Badge variant="outline" className="gap-1">
-                          <Briefcase className="h-3 w-3" />
-                          {job.level}
-                        </Badge>
-                      )}
-                      {job.type && <Badge>{job.type}</Badge>}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Dialog open={editingJob === job.id} onOpenChange={(open) => setEditingJob(open ? job.id : null)}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Edit Job</DialogTitle>
-                        </DialogHeader>
-                        <JobForm job={job} isCompanyAdmin={isCompanyAdmin} onSuccess={() => setEditingJob(null)} />
-                      </DialogContent>
-                    </Dialog>
-                    <DeleteJobButton id={job.id} />
-                  </div>
-                </div>
-              </CardHeader>
-              {job.description && (
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{job.description}</p>
-                </CardContent>
-              )}
-              <div className="px-6 pb-4">
-                <Button variant="ghost" size="sm" className="gap-2" onClick={() => setExpandedJob(expandedJob === job.id ? null : job.id)}>
-                  <Users className="h-4 w-4" />
-                  {expandedJob === job.id ? "Hide" : "View"} Applications
-                  {expandedJob === job.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </Button>
-              </div>
-              {expandedJob === job.id && <JobApplicationsView jobPostId={job.id} />}
+        <>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Input
+              placeholder="Search jobs by title, location, level, type..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              className="sm:max-w-md"
+            />
+            <p className="text-sm text-muted-foreground">{filteredJobs.length} matching jobs</p>
+          </div>
+
+          {filteredJobs.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">No jobs match your search.</p>
+              </CardContent>
             </Card>
-          ))}
-        </div>
+          ) : (
+            <div className="space-y-4">
+              {paginatedJobs.map((job: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; isRecruiterPosition?: boolean }) => (
+                <Card key={job.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle>{job.title}</CardTitle>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {job.location && (
+                            <Badge variant="secondary" className="gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {job.location}
+                            </Badge>
+                          )}
+                          {job.salaryRange && (
+                            <Badge variant="secondary" className="gap-1">
+                              <DollarSign className="h-3 w-3" />
+                              {job.salaryRange}
+                            </Badge>
+                          )}
+                          {job.level && (
+                            <Badge variant="outline" className="gap-1">
+                              <Briefcase className="h-3 w-3" />
+                              {job.level}
+                            </Badge>
+                          )}
+                          {job.type && <Badge>{job.type}</Badge>}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Dialog open={editingJob === job.id} onOpenChange={(open) => setEditingJob(open ? job.id : null)}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="icon">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit Job</DialogTitle>
+                            </DialogHeader>
+                            <JobForm job={job} isCompanyAdmin={isCompanyAdmin} onSuccess={() => setEditingJob(null)} />
+                          </DialogContent>
+                        </Dialog>
+                        <DeleteJobButton id={job.id} />
+                      </div>
+                    </div>
+                  </CardHeader>
+                  {job.description && (
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">{job.description}</p>
+                    </CardContent>
+                  )}
+                  <div className="px-6 pb-4">
+                    <Button variant="ghost" size="sm" className="gap-2" onClick={() => setExpandedJob(expandedJob === job.id ? null : job.id)}>
+                      <Users className="h-4 w-4" />
+                      {expandedJob === job.id ? "Hide" : "View"} Applications
+                      {expandedJob === job.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  {expandedJob === job.id && <JobApplicationsView jobPostId={job.id} />}
+                </Card>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Page {currentPage} / {totalPages}</p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={currentPage <= 1}>
+                Previous
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))} disabled={currentPage >= totalPages}>
+                Next
+              </Button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
@@ -158,6 +215,31 @@ const UserJobsView = () => {
   const applications = applicationsData?.response ?? [];
   const appliedJobIds = new Set(applications.map((a: { jobPostId: string }) => a.jobPostId));
   const [applyingJob, setApplyingJob] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+
+  const filteredJobs = jobs.filter((job: { title?: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; company?: { name?: string } }) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+
+    return (
+      job.title?.toLowerCase().includes(term) ||
+      job.description?.toLowerCase().includes(term) ||
+      job.location?.toLowerCase().includes(term) ||
+      job.salaryRange?.toLowerCase().includes(term) ||
+      job.level?.toLowerCase().includes(term) ||
+      job.type?.toLowerCase().includes(term) ||
+      job.company?.name?.toLowerCase().includes(term)
+    );
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / JOBS_PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedJobs = filteredJobs.slice((currentPage - 1) * JOBS_PAGE_SIZE, currentPage * JOBS_PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, jobs.length]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -175,8 +257,26 @@ const UserJobsView = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {jobs.map((job: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; isRecruiterPosition?: boolean; company?: { name: string } }) => {
+        <>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Input
+              placeholder="Search jobs by title, company, location, type..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              className="sm:max-w-md"
+            />
+            <p className="text-sm text-muted-foreground">{filteredJobs.length} matching jobs</p>
+          </div>
+
+          {filteredJobs.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">No jobs match your search.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {paginatedJobs.map((job: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; isRecruiterPosition?: boolean; company?: { name: string } }) => {
             const hasApplied = appliedJobIds.has(job.id);
 
             return (
@@ -236,8 +336,22 @@ const UserJobsView = () => {
                 )}
               </Card>
             );
-          })}
-        </div>
+              })}
+            </div>
+          )}
+
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Page {currentPage} / {totalPages}</p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={currentPage <= 1}>
+                Previous
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))} disabled={currentPage >= totalPages}>
+                Next
+              </Button>
+            </div>
+          </div>
+        </>
       )}
 
       <div className="mt-8">
@@ -472,6 +586,10 @@ const DeleteJobButton = ({ id }: { id: string }) => {
   const queryClient = useQueryClient();
 
   const handleDelete = () => {
+    if (!window.confirm("Delete this job posting?")) {
+      return;
+    }
+
     deleteJob.mutate(id, {
       onSuccess: () => {
         toast.success("Job deleted!");

@@ -20,6 +20,7 @@ public sealed class WebAppDatabaseContext(DbContextOptions<WebAppDatabaseContext
     public DbSet<PostLike> PostLikes { get; set; } = null!;
     public DbSet<PostImage> PostImages { get; set; } = null!;
     public DbSet<Connection> Connections { get; set; } = null!;
+    public DbSet<Feedback> Feedbacks { get; set; } = null!;
 
     /// <summary>
     /// Here additional configuration for the ORM is performed.

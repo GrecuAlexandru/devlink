@@ -56,6 +56,30 @@ public class PostService(IRepository<WebAppDatabaseContext> repository, IFileRep
         return ServiceResponse.ForSuccess();
     }
 
+    public async Task<ServiceResponse> UpdatePost(PostUpdateRecord post, UserRecord requestingUser, CancellationToken cancellationToken = default)
+    {
+        var entity = await repository.GetAsync(new PostSpec(post.Id), cancellationToken);
+        if (entity == null)
+        {
+            return ServiceResponse.FromError(new(HttpStatusCode.NotFound, "Post not found!", ErrorCodes.EntityNotFound));
+        }
+
+        if (entity.AuthorId != requestingUser.Id)
+        {
+            return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "Only the author can edit their post!", ErrorCodes.CannotUpdate));
+        }
+
+        if (string.IsNullOrWhiteSpace(post.Content))
+        {
+            return ServiceResponse.FromError(new(HttpStatusCode.BadRequest, "Post content cannot be empty!", ErrorCodes.CannotUpdate));
+        }
+
+        entity.Content = post.Content.Trim();
+        await repository.UpdateAsync(entity, cancellationToken);
+
+        return ServiceResponse.ForSuccess();
+    }
+
     public async Task<ServiceResponse> DeletePost(Guid postId, UserRecord requestingUser, CancellationToken cancellationToken = default)
     {
         var post = await repository.GetAsync(new PostSpec(postId), cancellationToken);

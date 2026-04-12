@@ -1,12 +1,12 @@
-import { memo, useState, useRef } from "react";
-import { useGetFeed, useCreatePost, useDeletePost, useLikePost, useUnlikePost, useAddComment, useDeleteComment } from "@/infrastructure/apis/api-management/feed";
+import { memo, useState, useRef, useEffect } from "react";
+import { useGetFeed, useCreatePost, useDeletePost, useLikePost, useUnlikePost, useAddComment, useDeleteComment, useUpdatePost } from "@/infrastructure/apis/api-management/feed";
 import { useOwnUser } from "@/infrastructure/hooks/useOwnUser";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Heart, MessageSquare, Trash2, Image as ImageIcon, Send } from "lucide-react";
+import { Heart, MessageSquare, Trash2, Image as ImageIcon, Send, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AppRoute } from "@/routes";
 
@@ -15,6 +15,7 @@ const basePath = import.meta.env.VITE_APP_API_BASE_URL || "http://localhost:5000
 const PostCard = ({ post }: { post: any }) => {
   const currentUser = useOwnUser();
   const deletePost = useDeletePost();
+  const updatePost = useUpdatePost();
   const likePost = useLikePost();
   const unlikePost = useUnlikePost();
   const addComment = useAddComment();
@@ -22,6 +23,12 @@ const PostCard = ({ post }: { post: any }) => {
   
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(post.content);
+
+  useEffect(() => {
+    setEditedContent(post.content);
+  }, [post.content]);
 
   const handleLike = () => {
     if (post.isLikedByMe) {
@@ -39,6 +46,24 @@ const PostCard = ({ post }: { post: any }) => {
     });
   };
 
+  const handleUpdatePost = () => {
+    if (!editedContent.trim()) {
+      return;
+    }
+
+    updatePost.mutate(
+      {
+        id: post.id,
+        content: editedContent.trim(),
+      },
+      {
+        onSuccess: () => {
+          setIsEditing(false);
+        },
+      }
+    );
+  };
+
   return (
     <Card className="mb-6 overflow-hidden">
       <CardHeader className="flex flex-row items-start justify-between p-4">
@@ -54,19 +79,59 @@ const PostCard = ({ post }: { post: any }) => {
           </div>
         </Link>
         {post.authorId === currentUser?.id && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={() => deletePost.mutate(post.id)}
-            disabled={deletePost.isPending}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsEditing((prev) => !prev)}
+              disabled={updatePost.isPending}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => {
+                if (window.confirm("Delete this post?")) {
+                  deletePost.mutate(post.id);
+                }
+              }}
+              disabled={deletePost.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         )}
       </CardHeader>
       <CardContent className="p-4 pt-0 space-y-4">
-        <p className="whitespace-pre-wrap">{post.content}</p>
+        {isEditing ? (
+          <div className="space-y-2">
+            <Textarea
+              value={editedContent}
+              onChange={(event) => setEditedContent(event.target.value)}
+              className="min-h-25 resize-none"
+            />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleUpdatePost} disabled={updatePost.isPending || !editedContent.trim()}>
+                {updatePost.isPending ? "Saving..." : "Save"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditedContent(post.content);
+                  setIsEditing(false);
+                }}
+                disabled={updatePost.isPending}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="whitespace-pre-wrap">{post.content}</p>
+        )}
         
         {post.imageUrls && post.imageUrls.length > 0 && (
           <div className={`grid gap-2 ${post.imageUrls.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
@@ -142,7 +207,11 @@ const PostCard = ({ post }: { post: any }) => {
                         variant="ghost" 
                         size="icon" 
                         className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => deleteComment.mutate(comment.id)}
+                        onClick={() => {
+                          if (window.confirm("Delete this comment?")) {
+                            deleteComment.mutate(comment.id);
+                          }
+                        }}
                         disabled={deleteComment.isPending}
                       >
                         <Trash2 className="h-3 w-3" />
@@ -192,7 +261,7 @@ export const FeedPage = memo(() => {
               placeholder="What do you want to talk about?" 
               value={content}
               onChange={e => setContent(e.target.value)}
-              className="resize-none min-h-[100px]"
+              className="resize-none min-h-25"
             />
             <div className="flex items-center justify-between">
               <div>

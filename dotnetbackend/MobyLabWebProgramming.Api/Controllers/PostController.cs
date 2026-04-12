@@ -25,6 +25,17 @@ public class PostController(ILogger<PostController> logger, IUserService userSer
     }
 
     [Authorize]
+    [HttpPut]
+    public async Task<ActionResult<RequestResponse>> Update([FromBody] PostUpdateRecord post)
+    {
+        var currentUser = await GetCurrentUser();
+
+        return currentUser.Result != null
+            ? FromServiceResponse(await postService.UpdatePost(post, currentUser.Result))
+            : ErrorMessageResult(currentUser.Error);
+    }
+
+    [Authorize]
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<RequestResponse>> Delete([FromRoute] Guid id)
     {

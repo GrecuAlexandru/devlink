@@ -38,6 +38,7 @@ const DiscoverCard = ({ user }: { user: any }) => {
             <div>
               <p className="font-medium hover:underline">{user.name}</p>
               <p className="text-sm text-muted-foreground">{user.email}</p>
+              <p className="text-xs text-muted-foreground">Role: {user.role}</p>
             </div>
           </div>
         </Link>
@@ -92,7 +93,11 @@ const ConnectionCard = ({ connection }: { connection: any }) => {
         <Button 
           variant="destructive" 
           size="sm" 
-          onClick={() => removeConnection.mutate(connection.id)}
+          onClick={() => {
+            if (window.confirm("Remove this connection?")) {
+              removeConnection.mutate(connection.id);
+            }
+          }}
           disabled={removeConnection.isPending}
         >
           Remove
@@ -167,7 +172,11 @@ export const PeoplePage = memo(() => {
   const { data: pendingData, isLoading: pendingLoading } = useGetPendingRequests();
   
   const currentUser = useOwnUser();
-  const users = (usersData?.response?.data ?? []).filter((user: { id: string }) => user.id !== currentUser?.id);
+  const usersPage = usersData?.response;
+  const users = (usersPage?.data ?? []).filter((user: { id: string }) => user.id !== currentUser?.id);
+  const usersPageSize = usersPage?.pageSize ?? 20;
+  const usersTotalCount = usersPage?.totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(usersTotalCount / usersPageSize));
   const connections = connectionsData?.response ?? [];
   const pendingRequests = pendingData?.response ?? [];
 
@@ -209,6 +218,19 @@ export const PeoplePage = memo(() => {
                 ))}
               </div>
               {users.length === 0 && <p className="text-muted-foreground">No people found.</p>}
+              {users.length > 0 && (
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-sm text-muted-foreground">Page {page} / {totalPages}</p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setPage((prev) => Math.max(1, prev - 1))} disabled={page <= 1}>
+                      Previous
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))} disabled={page >= totalPages}>
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </TabsContent>

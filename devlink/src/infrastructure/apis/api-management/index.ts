@@ -6,3 +6,4 @@ export * from "./profile";
 export * from "./jobs";
 export * from "./connections";
 export * from "./feed";
+export * from "./feedback";

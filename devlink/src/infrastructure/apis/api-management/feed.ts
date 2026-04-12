@@ -79,6 +79,28 @@ export const useDeletePost = () => {
   });
 };
 
+export const useUpdatePost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: string; content: string }) => {
+      const response = await fetch(`${basePath}/api/Post/Update`, {
+        method: "PUT",
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err?.errorMessage?.message || "Failed to update post");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
+    },
+  });
+};
+
 export const useLikePost = () => {
   const queryClient = useQueryClient();
   return useMutation({

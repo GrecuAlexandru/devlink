@@ -18,7 +18,7 @@ export function Navbar() {
   const dispatch = useAppDispatch();
   const { redirectToHome } = useAppRouter();
   const user = useOwnUser();
-  const isCompanyAdmin = user?.role === "CompanyAdmin" || user?.role === "Recruiter";
+  const isAdmin = user?.role === "Admin" || user?.email === "admin@default.com";
 
   const logout = () => {
     queryClient.clear();
@@ -39,7 +39,15 @@ export function Navbar() {
               </NavigationMenuLink>
             </NavigationMenuItem>
 
-            {loggedIn && (
+            {loggedIn && (isAdmin ? (
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link to={AppRoute.Feedback} className={navigationMenuTriggerStyle()}>
+                    Feedback
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            ) : (
               <>
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
@@ -64,13 +72,20 @@ export function Navbar() {
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
+                    <Link to={AppRoute.Feedback} className={navigationMenuTriggerStyle()}>
+                      Feedback
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild>
                     <Link to={AppRoute.Company} className={navigationMenuTriggerStyle()}>
                       Company
                     </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               </>
-            )}
+            ))}
 
             <NavigationMenuItem className="ml-auto flex gap-1">
               {!loggedIn ? (
@@ -88,11 +103,13 @@ export function Navbar() {
                 </>
               ) : (
                 <>
-                  <NavigationMenuLink asChild>
-                    <Link to={AppRoute.Profile} className={navigationMenuTriggerStyle()}>
-                      Profile
-                    </Link>
-                  </NavigationMenuLink>
+                  {!isAdmin && (
+                    <NavigationMenuLink asChild>
+                      <Link to={AppRoute.Profile} className={navigationMenuTriggerStyle()}>
+                        Profile
+                      </Link>
+                    </NavigationMenuLink>
+                  )}
                   <button onClick={logout} className={navigationMenuTriggerStyle()}>
                     Logout
                   </button>

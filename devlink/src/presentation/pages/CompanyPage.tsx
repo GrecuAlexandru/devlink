@@ -156,7 +156,7 @@ const CompanyDetailsCard = ({ company, isReadonly }: { company: any; isReadonly:
 
   return (
     <Card className="overflow-hidden">
-      <div className="h-32 bg-gradient-to-r from-emerald-600 to-teal-600" />
+      <div className="h-32 bg-linear-to-r from-emerald-600 to-teal-600" />
       <CardContent className="relative px-6 pb-6">
         <div className="-mt-12 mb-6 flex items-end gap-4">
           <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-background shadow-sm">
@@ -246,6 +246,11 @@ const CompanyMembersList = ({ companyId, isReadonly }: { companyId: string; isRe
 
   const handleRemove = (userId: string) => {
     if (!isOwner) return;
+
+    if (!window.confirm("Remove this member from the company?")) {
+      return;
+    }
+
     removeMember.mutate(userId, {
       onSuccess: () => {
         toast.success("Member removed!");
