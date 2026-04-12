@@ -7,7 +7,6 @@ using MobyLabWebProgramming.Infrastructure.Repositories.Interfaces;
 using MobyLabWebProgramming.Infrastructure.Requests;
 using MobyLabWebProgramming.Infrastructure.Responses;
 using MobyLabWebProgramming.Services.Abstractions;
-using MobyLabWebProgramming.Services.Constants;
 using MobyLabWebProgramming.Services.DataTransferObjects;
 using MobyLabWebProgramming.Services.Specifications;
 
@@ -16,7 +15,7 @@ namespace MobyLabWebProgramming.Services.Implementations;
 /// <summary>
 /// Inject the required services through the constructor.
 /// </summary>
-public class UserService(IRepository<WebAppDatabaseContext> repository, ILoginService loginService, IMailService mailService)
+public class UserService(IRepository<WebAppDatabaseContext> repository, ILoginService loginService)
     : IUserService
 {
     public async Task<ServiceResponse<UserRecord>> GetUser(Guid id, CancellationToken cancellationToken = default)
@@ -87,9 +86,7 @@ public class UserService(IRepository<WebAppDatabaseContext> repository, ILoginSe
             Name = user.Name,
             Role = user.Role,
             Password = user.Password
-        }, cancellationToken); // A new entity is created and persisted in the database.
-
-        await mailService.SendMail(user.Email, "Welcome!", MailTemplates.UserAddTemplate(user.Name), true, "My App", cancellationToken); // You can send a notification on the user email. Change the email if you want.
+        }, cancellationToken);
 
         return ServiceResponse.ForSuccess();
     }

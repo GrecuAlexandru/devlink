@@ -14,3 +14,9 @@ public sealed class UserSpec : Specification<User>
 
     public UserSpec(string email) => Query.Where(e => e.Email == email);
 }
+
+public sealed class UserByCompanyIdAndRoleSpec : Specification<User>
+{
+    public UserByCompanyIdAndRoleSpec(Guid companyId, Database.Repository.Enums.UserRoleEnum role) 
+        => Query.Where(e => e.CompanyId == companyId && e.Role == role);
+}

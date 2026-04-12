@@ -406,6 +406,7 @@ const JobForm = ({ job, isCompanyAdmin, onSuccess }: { job?: { id: string; title
 
 const ApplyForm = ({ jobId, onSuccess }: { jobId: string; onSuccess: () => void }) => {
   const applyToJob = useApplyToJob();
+  const queryClient = useQueryClient();
 
   const schema = yup.object().shape({
     coverLetter: yup.string(),
@@ -427,7 +428,11 @@ const ApplyForm = ({ jobId, onSuccess }: { jobId: string; onSuccess: () => void 
   const submit = useCallback(
     (data: ApplyFormModel) => {
       return applyToJob.mutateAsync({ jobPostId: jobId, coverLetter: data.coverLetter, expectedSalary: data.expectedSalary ? parseFloat(data.expectedSalary) : undefined })
-        .then(() => {
+        .then(async () => {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["myApplications"] }),
+            queryClient.invalidateQueries({ queryKey: ["allJobs"] }),
+          ]);
           toast.success("Application submitted!");
           onSuccess();
         })
@@ -435,7 +440,7 @@ const ApplyForm = ({ jobId, onSuccess }: { jobId: string; onSuccess: () => void 
           toast.error((error as Error)?.message || "Failed to apply!");
         });
     },
-    [applyToJob, jobId, onSuccess]
+    [applyToJob, jobId, onSuccess, queryClient]
   );
 
   return (
@@ -498,6 +503,9 @@ const JobApplicationsView = ({ jobPostId }: { jobPostId: string }) => {
         onSuccess: () => {
           toast.success("Application status updated!");
           queryClient.invalidateQueries({ queryKey: ["jobApplications", jobPostId] });
+          queryClient.invalidateQueries({ queryKey: ["myCompanyJobs"] });
+          queryClient.invalidateQueries({ queryKey: ["allJobs"] });
+          queryClient.invalidateQueries({ queryKey: ["myApplications"] });
         },
         onError: (error: unknown) => {
           toast.error((error as Error)?.message || "Failed to update status!");

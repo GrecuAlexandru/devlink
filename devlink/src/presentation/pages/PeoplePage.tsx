@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useGetUsers } from "@/infrastructure/apis/api-management/profile";
 import { 
   useGetMyConnections, 
@@ -104,6 +105,7 @@ const ConnectionCard = ({ connection }: { connection: any }) => {
 const PendingRequestCard = ({ request }: { request: any }) => {
   const acceptRequest = useAcceptConnection();
   const rejectRequest = useRejectConnection();
+  const queryClient = useQueryClient();
 
   const requester = request.requester;
   if (!requester) return null;
@@ -128,7 +130,12 @@ const PendingRequestCard = ({ request }: { request: any }) => {
           <Button 
             variant="default" 
             size="sm"
-            onClick={() => acceptRequest.mutate(request.id)}
+            onClick={() => acceptRequest.mutate(request.id, {
+              onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ["pendingRequests"] });
+                queryClient.invalidateQueries({ queryKey: ["myConnections"] });
+              }
+            })}
             disabled={acceptRequest.isPending || rejectRequest.isPending}
           >
             Accept
@@ -136,7 +143,11 @@ const PendingRequestCard = ({ request }: { request: any }) => {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => rejectRequest.mutate(request.id)}
+            onClick={() => rejectRequest.mutate(request.id, {
+              onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ["pendingRequests"] });
+              }
+            })}
             disabled={acceptRequest.isPending || rejectRequest.isPending}
           >
             Decline

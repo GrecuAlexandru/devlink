@@ -26,7 +26,12 @@ public sealed class AllJobPostsSpec : Specification<JobPost>
 
 public sealed class JobPostWithCompanySpec : Specification<JobPost>
 {
-    public JobPostWithCompanySpec() => Query.OrderByDescending(e => e.CreatedAt).Include(e => e.Company);
+    public JobPostWithCompanySpec(Guid id) => Query.Where(e => e.Id == id).Include(e => e.Company).ThenInclude(c => c!.Users);
+}
+
+public sealed class JobPostWithCompanySpecAll : Specification<JobPost>
+{
+    public JobPostWithCompanySpecAll() => Query.OrderByDescending(e => e.CreatedAt).Include(e => e.Company);
 }
 
 public sealed class ApplicationProjectionSpec : Specification<Application, ApplicationRecord>

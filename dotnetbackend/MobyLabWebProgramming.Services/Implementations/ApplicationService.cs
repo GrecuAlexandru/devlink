@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.Extensions.Logging;
 using MobyLabWebProgramming.Database.Repository;
 using MobyLabWebProgramming.Database.Repository.Entities;
 using MobyLabWebProgramming.Database.Repository.Enums;
@@ -6,12 +7,13 @@ using MobyLabWebProgramming.Infrastructure.Errors;
 using MobyLabWebProgramming.Infrastructure.Repositories.Interfaces;
 using MobyLabWebProgramming.Infrastructure.Responses;
 using MobyLabWebProgramming.Services.Abstractions;
+using MobyLabWebProgramming.Services.Constants;
 using MobyLabWebProgramming.Services.DataTransferObjects;
 using MobyLabWebProgramming.Services.Specifications;
 
 namespace MobyLabWebProgramming.Services.Implementations;
 
-public class ApplicationService(IRepository<WebAppDatabaseContext> repository) : IApplicationService
+public class ApplicationService(IRepository<WebAppDatabaseContext> repository, IMailService mailService, ILogger<ApplicationService> logger) : IApplicationService
 {
     public async Task<ServiceResponse> Apply(ApplicationAddRecord application, UserRecord requestingUser, CancellationToken cancellationToken = default)
     {
@@ -137,9 +139,34 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository) :
         application.Status = status;
         await repository.UpdateAsync(application, cancellationToken);
 
+        var user = await repository.GetAsync(new UserSpec(application.UserId), cancellationToken);
+        if (user != null)
+        {
+            var statusText = status switch
+            {
+                ApplicationStatusEnum.Accepted => "accepted",
+                ApplicationStatusEnum.Rejected => "rejected",
+                ApplicationStatusEnum.Pending => "pending",
+                _ => "updated"
+            };
+            
+            var jobTitle = jobPost.Title;
+            var applicantMailResponse = await mailService.SendMail(
+                user.Email,
+                $"Your application for {jobTitle} has been {statusText}",
+                MailTemplates.ApplicationStatusTemplate(user.Name, jobTitle, statusText),
+                true,
+                "DevLink",
+                cancellationToken);
+
+            if (!applicantMailResponse.IsOk)
+            {
+                logger.LogWarning("Failed to send application status email for application {ApplicationId} to user {UserId}.", application.Id, user.Id);
+            }
+        }
+
         if (status == ApplicationStatusEnum.Accepted)
         {
-            var user = await repository.GetAsync(new UserSpec(application.UserId), cancellationToken);
             if (user != null)
             {
                 var existingMember = await repository.GetAsync(new CompanyMemberByUserSpec(application.UserId, companyId.Value), cancellationToken);
