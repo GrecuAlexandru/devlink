@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { useAppRouter } from "@/infrastructure/hooks/useAppRouter";
 import { jwtDecode } from "jwt-decode";
 import { AppRoute } from "@/routes";
+import { queryClient } from "@/main";
 
 export type LoginFormModel = {
   email: string;
@@ -69,8 +70,9 @@ export const useLoginFormController = (): LoginFormController => {
   const dispatch = useAppDispatch();
 
   const submit = useCallback(
-    (data: LoginFormModel) =>
-      login(data).then((result) => {
+    (data: LoginFormModel) => {
+      queryClient.clear();
+      return login(data).then((result) => {
         dispatch(setToken(result.response?.token ?? ""));
         toast.success("You logged in successfully!");
         const role = getRoleFromToken(result.response?.token ?? "");
@@ -82,7 +84,8 @@ export const useLoginFormController = (): LoginFormController => {
       })
       .catch((error) => {
         toast.error(error?.response?.data?.message || "Invalid email or password!");
-      }),
+      });
+    },
     [login, navigate, dispatch]
   );
 

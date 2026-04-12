@@ -75,15 +75,32 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
     public async Task<ServiceResponse<List<JobPostRecord>>> GetCompanyJobsByUser(Guid userId, CancellationToken cancellationToken = default)
     {
         var company = await repository.GetAsync(new CompanyByUserSpec(userId), cancellationToken);
-        if (company == null)
+        if (company != null)
         {
-            return ServiceResponse.ForSuccess(new List<JobPostRecord>());
+            return await GetCompanyJobs(company.Id, cancellationToken);
         }
 
-        return await GetCompanyJobs(company.Id, cancellationToken);
+        var member = await repository.GetAsync(new CompanyMemberByUserAnyCompanySpec(userId), cancellationToken);
+        if (member != null)
+        {
+            return await GetCompanyJobs(member.CompanyId, cancellationToken);
+        }
+
+        return ServiceResponse.ForSuccess(new List<JobPostRecord>());
     }
 
     private bool IsCompanyMember(UserRoleEnum role) => role == UserRoleEnum.CompanyAdmin || role == UserRoleEnum.Recruiter;
+
+    private async Task<Guid?> GetCompanyIdForUser(Guid userId, CancellationToken cancellationToken)
+    {
+        var company = await repository.GetAsync(new CompanyByUserSpec(userId), cancellationToken);
+        if (company != null) return company.Id;
+
+        var member = await repository.GetAsync(new CompanyMemberByUserAnyCompanySpec(userId), cancellationToken);
+        if (member != null) return member.CompanyId;
+
+        return null;
+    }
 
     public async Task<ServiceResponse> AddJobPost(JobPostAddRecord jobPost, UserRecord requestingUser, CancellationToken cancellationToken = default)
     {
@@ -97,8 +114,8 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "Only company admins can create recruiter positions!", ErrorCodes.CannotAdd));
         }
 
-        var company = await repository.GetAsync(new CompanyByUserSpec(requestingUser.Id), cancellationToken);
-        if (company == null)
+        var companyId = await GetCompanyIdForUser(requestingUser.Id, cancellationToken);
+        if (companyId == null)
         {
             return ServiceResponse.FromError(new(HttpStatusCode.NotFound, "Company not found!", ErrorCodes.EntityNotFound));
         }
@@ -112,7 +129,7 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             Level = jobPost.Level,
             Type = jobPost.Type,
             IsRecruiterPosition = jobPost.IsRecruiterPosition,
-            CompanyId = company.Id
+            CompanyId = companyId.Value
         };
 
         await repository.AddAsync(newJob, cancellationToken);
@@ -129,8 +146,8 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             return ServiceResponse.FromError(new(HttpStatusCode.NotFound, "Job post not found!", ErrorCodes.EntityNotFound));
         }
 
-        var company = await repository.GetAsync(new CompanyByUserSpec(requestingUser.Id), cancellationToken);
-        if (company == null || entity.CompanyId != company.Id)
+        var companyId = await GetCompanyIdForUser(requestingUser.Id, cancellationToken);
+        if (companyId == null || entity.CompanyId != companyId.Value)
         {
             return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "You can only update your own company's job posts!", ErrorCodes.CannotUpdate));
         }
@@ -162,8 +179,8 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             return ServiceResponse.FromError(new(HttpStatusCode.NotFound, "Job post not found!", ErrorCodes.EntityNotFound));
         }
 
-        var company = await repository.GetAsync(new CompanyByUserSpec(requestingUser.Id), cancellationToken);
-        if (company == null || entity.CompanyId != company.Id)
+        var companyId = await GetCompanyIdForUser(requestingUser.Id, cancellationToken);
+        if (companyId == null || entity.CompanyId != companyId.Value)
         {
             return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "You can only delete your own company's job posts!", ErrorCodes.CannotDelete));
         }

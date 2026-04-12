@@ -66,9 +66,9 @@ export const ToastNotifier = () => {
 
   return (
     <ToastContainer
-      position="top-left"
+      position="bottom-right"
       autoClose={5000}
-      hideProgressBar={false}
+      hideProgressBar={true}
       newestOnTop={false}
       closeOnClick
       rtl={false}
@@ -76,7 +76,6 @@ export const ToastNotifier = () => {
       draggable
       pauseOnHover
       theme="light"
-      limit={1}
     />
   );
 };

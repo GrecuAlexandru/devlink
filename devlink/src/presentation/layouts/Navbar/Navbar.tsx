@@ -11,6 +11,7 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import { queryClient } from "@/main";
 
 export function Navbar() {
   const { loggedIn } = useAppSelector((x) => x.profileReducer);
@@ -20,6 +21,7 @@ export function Navbar() {
   const isCompanyAdmin = user?.role === "CompanyAdmin" || user?.role === "Recruiter";
 
   const logout = () => {
+    queryClient.clear();
     dispatch(resetProfile());
     redirectToHome();
   };
@@ -60,15 +62,13 @@ export function Navbar() {
                     </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
-                {isCompanyAdmin && (
-                  <NavigationMenuItem>
-                    <NavigationMenuLink asChild>
-                      <Link to={AppRoute.Company} className={navigationMenuTriggerStyle()}>
-                        Company
-                      </Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                )}
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild>
+                    <Link to={AppRoute.Company} className={navigationMenuTriggerStyle()}>
+                      Company
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
               </>
             )}
 

@@ -28,7 +28,15 @@ public class CompanyService(IRepository<WebAppDatabaseContext> repository) : ICo
 
         if (result == null)
         {
-            return ServiceResponse.ForSuccess<CompanyRecord?>(null);
+            var member = await repository.GetAsync(new CompanyMemberByUserAnyCompanySpec(userId), cancellationToken);
+            if (member != null)
+            {
+                result = await repository.GetAsync(new CompanySpec(member.CompanyId), cancellationToken);
+            }
+            if (result == null)
+            {
+                return ServiceResponse.ForSuccess<CompanyRecord?>(null);
+            }
         }
 
         return ServiceResponse.ForSuccess<CompanyRecord?>(new CompanyRecord
@@ -70,6 +78,14 @@ public class CompanyService(IRepository<WebAppDatabaseContext> repository) : ICo
             user.CompanyId = newCompany.Id;
             await repository.UpdateAsync(user, cancellationToken);
         }
+
+        var newMember = new CompanyMember
+        {
+            UserId = requestingUser.Id,
+            CompanyId = newCompany.Id,
+            Role = UserRoleEnum.CompanyAdmin
+        };
+        await repository.AddAsync(newMember, cancellationToken);
 
         return ServiceResponse.ForSuccess();
     }

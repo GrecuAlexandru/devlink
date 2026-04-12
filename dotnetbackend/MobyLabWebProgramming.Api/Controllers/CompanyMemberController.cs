@@ -30,6 +30,17 @@ public class CompanyMemberController(ILogger<CompanyMemberController> logger, IU
     }
 
     [Authorize]
+    [HttpGet("{companyId:guid}")]
+    public async Task<ActionResult<RequestResponse<List<Services.DataTransferObjects.CompanyMemberRecord>>>> GetMembersById([FromRoute] Guid companyId)
+    {
+        var currentUser = await GetCurrentUser();
+
+        return currentUser.Result != null
+            ? FromServiceResponse(await companyMemberService.GetCompanyMembers(companyId))
+            : ErrorMessageResult<List<Services.DataTransferObjects.CompanyMemberRecord>>(currentUser.Error);
+    }
+
+    [Authorize]
     [HttpPost]
     public async Task<ActionResult<RequestResponse>> AddMember([FromBody] AddMemberRequest request)
     {

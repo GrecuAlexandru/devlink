@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { useAppRouter } from "@/infrastructure/hooks/useAppRouter";
 import { AppRoute } from "@/routes";
 import { jwtDecode } from "jwt-decode";
+import { queryClient } from "@/main";
 
 export type RegisterFormModel = {
   email: string;
@@ -91,6 +92,7 @@ export const useRegisterFormController = (): RegisterFormController => {
 
   const submit = useCallback(
     (data: RegisterFormModel) => {
+      queryClient.clear();
       const { confirmPassword, ...registerData } = data;
       return registerUser(registerData)
         .then((result) => {

@@ -88,6 +88,48 @@ export const useGetCompanyMembers = () => {
   });
 };
 
+export const useGetCompanyById = (id: string) => {
+  return useQuery({
+    queryKey: ["company", id],
+    queryFn: async () => {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${basePath}/api/Company/GetById/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch company");
+      }
+
+      return response.json();
+    },
+    enabled: !!id,
+  });
+};
+
+export const useGetCompanyMembersById = (companyId: string) => {
+  return useQuery({
+    queryKey: ["companyMembers", companyId],
+    queryFn: async () => {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${basePath}/api/CompanyMember/GetMembersById/${companyId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch members");
+      }
+
+      return response.json();
+    },
+    enabled: !!companyId,
+  });
+};
+
 export const useAddCompanyMember = () => {
   return useMutation({
     mutationFn: async (data: { userId: string; role: string }) => {

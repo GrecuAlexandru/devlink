@@ -1,17 +1,19 @@
-import { memo, useState } from "react";
-import { useGetMyCompany, useUpdateCompany, useGetCompanyMembers, useAddCompanyMember, useRemoveCompanyMember } from "@/infrastructure/apis/api-management/company";
+import { memo, useState, useEffect, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import { useGetMyCompany, useUpdateCompany, useGetCompanyMembers, useAddCompanyMember, useRemoveCompanyMember, useGetCompanyById, useGetCompanyMembersById } from "@/infrastructure/apis/api-management/company";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Globe, Briefcase, Users, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Building2, Globe, Briefcase, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
-import { useCallback, useEffect } from "react";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+
+import { useOwnUser } from "@/infrastructure/hooks/useOwnUser";
 
 type CompanyFormModel = {
   name: string;
@@ -21,11 +23,83 @@ type CompanyFormModel = {
 };
 
 export const CompanyPage = memo(() => {
+  const { id } = useParams<{ id: string }>();
+
+  if (id) {
+    return <CompanyByIdView id={id} />;
+  }
+  return <MyCompanyView />;
+});
+
+const CompanyByIdView = ({ id }: { id: string }) => {
+  const { data: companyData, isLoading } = useGetCompanyById(id);
+  const company = companyData?.response;
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <p className="text-center text-muted-foreground">Loading company information...</p>
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">Company not found.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
+      <CompanyDetailsCard company={company} isReadonly={true} />
+      <CompanyMembersCard companyId={id} isReadonly={true} />
+    </div>
+  );
+};
+
+const MyCompanyView = () => {
   const { data: companyData, isLoading } = useGetMyCompany();
+  const company = companyData?.response;
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <p className="text-center text-muted-foreground">Loading company information...</p>
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">You don't have a company yet.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
+      <CompanyDetailsCard company={company} isReadonly={false} />
+      <CompanyMembersCard companyId={company.id} isReadonly={false} />
+    </div>
+  );
+};
+
+const CompanyDetailsCard = ({ company, isReadonly }: { company: any; isReadonly: boolean }) => {
   const { mutateAsync: updateCompany, status } = useUpdateCompany();
   const queryClient = useQueryClient();
-  const company = companyData?.response;
-  const [showMembers, setShowMembers] = useState(false);
+  const user = useOwnUser();
+  const isOwner = user?.role === "CompanyAdmin" || user?.role === "Admin";
 
   const schema = yup.object().shape({
     name: yup.string().required("Company name is required!").min(2, "Name must be at least 2 characters!"),
@@ -62,6 +136,7 @@ export const CompanyPage = memo(() => {
 
   const submit = useCallback(
     (data: CompanyFormModel) => {
+      if (isReadonly || !isOwner) return;
       if (!company?.id) {
         toast.error("Company not found!");
         return;
@@ -76,110 +151,101 @@ export const CompanyPage = memo(() => {
           toast.error(error?.message || "Failed to update company!");
         });
     },
-    [updateCompany, company?.id, queryClient]
+    [updateCompany, company, queryClient, isReadonly, isOwner]
   );
 
-  if (isLoading) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <p className="text-center text-muted-foreground">Loading company information...</p>
-      </div>
-    );
-  }
-
-  if (!company) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">You don't have a company yet.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
-      <Card className="overflow-hidden">
-        <div className="h-32 bg-gradient-to-r from-emerald-600 to-teal-600" />
-        <CardContent className="relative px-6 pb-6">
-          <div className="-mt-12 mb-6 flex items-end gap-4">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-background shadow-sm">
-              <Building2 className="h-10 w-10 text-primary" />
+    <Card className="overflow-hidden">
+      <div className="h-32 bg-gradient-to-r from-emerald-600 to-teal-600" />
+      <CardContent className="relative px-6 pb-6">
+        <div className="-mt-12 mb-6 flex items-end gap-4">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-background shadow-sm">
+            <Building2 className="h-10 w-10 text-primary" />
+          </div>
+          <div className="mb-1">
+            <h1 className="text-2xl font-bold">{company.name}</h1>
+            {company.industry && (
+              <p className="flex items-center gap-1 text-muted-foreground">
+                <Briefcase className="h-4 w-4" />
+                {company.industry}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit(submit)} className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="name">Company Name</Label>
+              <Input id="name" {...register("name")} disabled={isReadonly || !isOwner || status === "pending"} />
+              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
-            <div className="mb-1">
-              <h1 className="text-2xl font-bold">{company.name}</h1>
-              {company.industry && (
-                <p className="flex items-center gap-1 text-muted-foreground">
-                  <Briefcase className="h-4 w-4" />
-                  {company.industry}
-                </p>
-              )}
+            <div className="space-y-2">
+              <Label htmlFor="industry">Industry</Label>
+              <Input id="industry" {...register("industry")} disabled={isReadonly || !isOwner || status === "pending"} />
+              {errors.industry && <p className="text-sm text-destructive">{errors.industry.message}</p>}
             </div>
           </div>
 
-          <form onSubmit={handleSubmit(submit)} className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">Company Name</Label>
-                <Input id="name" {...register("name")} disabled={status === "pending"} />
-                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="industry">Industry</Label>
-                <Input id="industry" {...register("industry")} disabled={status === "pending"} />
-                {errors.industry && <p className="text-sm text-destructive">{errors.industry.message}</p>}
-              </div>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="website">
+              <Globe className="mr-1 inline h-4 w-4" />
+              Website
+            </Label>
+            <Input id="website" {...register("website")} disabled={isReadonly || !isOwner || status === "pending"} placeholder="https://company.com" />
+            {errors.website && <p className="text-sm text-destructive">{errors.website.message}</p>}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="website">
-                <Globe className="mr-1 inline h-4 w-4" />
-                Website
-              </Label>
-              <Input id="website" {...register("website")} disabled={status === "pending"} placeholder="https://company.com" />
-              {errors.website && <p className="text-sm text-destructive">{errors.website.message}</p>}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Input id="description" {...register("description")} disabled={isReadonly || !isOwner || status === "pending"} placeholder="Describe your company..." />
+            {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input id="description" {...register("description")} disabled={status === "pending"} placeholder="Describe your company..." />
-              {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
-            </div>
-
+          {!isReadonly && isOwner && (
             <Button type="submit" disabled={status === "pending"}>
               {status === "pending" ? "Saving..." : "Save Changes"}
             </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Members</CardTitle>
-              <CardDescription>Manage your company members</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setShowMembers(!showMembers)}>
-              {showMembers ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-          </div>
-        </CardHeader>
-        {showMembers && <CompanyMembersView />}
-      </Card>
-    </div>
+          )}
+        </form>
+      </CardContent>
+    </Card>
   );
-});
+};
 
-const CompanyMembersView = () => {
-  const { data: membersData, isLoading } = useGetCompanyMembers();
+const CompanyMembersCard = ({ companyId, isReadonly }: { companyId: string; isReadonly: boolean }) => {
+  const [showMembers, setShowMembers] = useState(false);
+  const user = useOwnUser();
+  const isOwner = user?.role === "CompanyAdmin" || user?.role === "Admin";
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Members</CardTitle>
+            <CardDescription>{isReadonly ? "People who work here" : isOwner ? "Manage your company members" : "View company members"}</CardDescription>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => setShowMembers(!showMembers)}>
+            {showMembers ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </div>
+      </CardHeader>
+      {showMembers && <CompanyMembersList companyId={companyId} isReadonly={isReadonly} />}
+    </Card>
+  );
+};
+
+const CompanyMembersList = ({ companyId, isReadonly }: { companyId: string; isReadonly: boolean }) => {
+  const { data: membersData, isLoading } = useGetCompanyMembersById(companyId);
   const members = membersData?.response ?? [];
   const removeMember = useRemoveCompanyMember();
   const queryClient = useQueryClient();
+  const user = useOwnUser();
+  const isOwner = user?.role === "CompanyAdmin" || user?.role === "Admin";
 
   const handleRemove = (userId: string) => {
+    if (!isOwner) return;
     removeMember.mutate(userId, {
       onSuccess: () => {
         toast.success("Member removed!");
@@ -192,11 +258,11 @@ const CompanyMembersView = () => {
   };
 
   if (isLoading) {
-    return <p className="px-6 text-sm text-muted-foreground">Loading members...</p>;
+    return <p className="px-6 pb-6 text-sm text-muted-foreground">Loading members...</p>;
   }
 
   if (members.length === 0) {
-    return <p className="px-6 text-sm text-muted-foreground">No members yet.</p>;
+    return <p className="px-6 pb-6 text-sm text-muted-foreground">No members yet.</p>;
   }
 
   return (
@@ -213,7 +279,7 @@ const CompanyMembersView = () => {
                 <Badge variant={member.role === "CompanyAdmin" ? "default" : member.role === "Recruiter" ? "secondary" : "outline"}>
                   {member.role === "CompanyAdmin" ? "Owner" : member.role}
                 </Badge>
-                {member.role !== "CompanyAdmin" && (
+                {!isReadonly && isOwner && member.role !== "CompanyAdmin" && (
                   <Button variant="destructive" size="icon" onClick={() => handleRemove(member.userId)} disabled={removeMember.status === "pending"}>
                     <Trash2 className="h-4 w-4" />
                   </Button>

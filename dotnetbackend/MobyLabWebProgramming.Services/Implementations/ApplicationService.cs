@@ -69,8 +69,8 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository) :
             return ServiceResponse.FromError<List<ApplicationRecord>>(new(HttpStatusCode.NotFound, "Job post not found!", ErrorCodes.EntityNotFound));
         }
 
-        var company = await repository.GetAsync(new CompanyByUserSpec(requestingUser.Id), cancellationToken);
-        if (company == null || jobPost.CompanyId != company.Id)
+        var companyId = await GetCompanyIdForUser(requestingUser.Id, cancellationToken);
+        if (companyId == null || jobPost.CompanyId != companyId.Value)
         {
             return ServiceResponse.FromError<List<ApplicationRecord>>(new(HttpStatusCode.Forbidden, "You can only view applications for your own company's jobs!", ErrorCodes.CannotUpdate));
         }
@@ -88,6 +88,17 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository) :
         }).ToList());
     }
 
+    private async Task<Guid?> GetCompanyIdForUser(Guid userId, CancellationToken cancellationToken)
+    {
+        var company = await repository.GetAsync(new CompanyByUserSpec(userId), cancellationToken);
+        if (company != null) return company.Id;
+
+        var member = await repository.GetAsync(new CompanyMemberByUserAnyCompanySpec(userId), cancellationToken);
+        if (member != null) return member.CompanyId;
+
+        return null;
+    }
+
     public async Task<ServiceResponse> UpdateStatus(Guid id, ApplicationStatusEnum status, UserRecord requestingUser, CancellationToken cancellationToken = default)
     {
         var application = await repository.GetAsync(new ApplicationSpec(id), cancellationToken);
@@ -102,10 +113,25 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository) :
             return ServiceResponse.FromError(new(HttpStatusCode.NotFound, "Job post not found!", ErrorCodes.EntityNotFound));
         }
 
-        var company = await repository.GetAsync(new CompanyByUserSpec(requestingUser.Id), cancellationToken);
-        if (company == null || jobPost.CompanyId != company.Id)
+        var companyId = await GetCompanyIdForUser(requestingUser.Id, cancellationToken);
+        if (companyId == null || jobPost.CompanyId != companyId.Value)
         {
             return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "You can only update applications for your own company's jobs!", ErrorCodes.CannotUpdate));
+        }
+
+        if (application.UserId == requestingUser.Id)
+        {
+            return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "You cannot modify your own application state!", ErrorCodes.CannotUpdate));
+        }
+
+        if (application.Status != ApplicationStatusEnum.Pending && status == ApplicationStatusEnum.Pending)
+        {
+            return ServiceResponse.FromError(new(HttpStatusCode.BadRequest, "You cannot change the state back to Pending!", ErrorCodes.CannotUpdate));
+        }
+
+        if (application.Status == ApplicationStatusEnum.Accepted || application.Status == ApplicationStatusEnum.Rejected)
+        {
+             return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "You cannot change the state of an application that has already been accepted or rejected!", ErrorCodes.CannotUpdate));
         }
 
         application.Status = status;
@@ -116,7 +142,7 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository) :
             var user = await repository.GetAsync(new UserSpec(application.UserId), cancellationToken);
             if (user != null)
             {
-                var existingMember = await repository.GetAsync(new CompanyMemberByUserSpec(application.UserId, company.Id), cancellationToken);
+                var existingMember = await repository.GetAsync(new CompanyMemberByUserSpec(application.UserId, companyId.Value), cancellationToken);
                 if (existingMember == null)
                 {
                     var role = jobPost.IsRecruiterPosition ? UserRoleEnum.Recruiter : UserRoleEnum.Client;
@@ -126,7 +152,7 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository) :
                     var newMember = new CompanyMember
                     {
                         UserId = application.UserId,
-                        CompanyId = company.Id,
+                        CompanyId = companyId.Value,
                         Role = role
                     };
                     await repository.AddAsync(newMember, cancellationToken);

@@ -32,6 +32,7 @@ function App() {
           {loggedIn && <Route path={AppRoute.Applications} element={<ApplicationsPage />} />}
           {loggedIn && <Route path={AppRoute.Feedback} element={<FeedbackPage />} />}
           {loggedIn && <Route path={AppRoute.Company} element={<CompanyPage />} />}
+          {loggedIn && <Route path={AppRoute.Company + "/:id"} element={<CompanyPage />} />}
           {loggedIn && <Route path={AppRoute.Profile} element={<ProfilePage />} />}
           {loggedIn && <Route path={AppRoute.Profile + "/:id"} element={<ProfilePage />} />}
           {loggedIn && <Route path={AppRoute.People} element={<PeoplePage />} />}

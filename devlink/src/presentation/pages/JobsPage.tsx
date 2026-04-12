@@ -528,17 +528,19 @@ const JobApplicationsView = ({ jobPostId }: { jobPostId: string }) => {
                   {app.expectedSalary && <p className="mt-1 text-sm text-muted-foreground">Expected salary: ${app.expectedSalary.toLocaleString()}</p>}
                 </div>
                 <div className="ml-4 flex items-center gap-2">
-                  <select
-                    value={app.status}
-                    onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                    className="rounded-md border bg-background px-2 py-1 text-sm"
-                    disabled={updateStatus.status === "pending"}
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Interview">Interview</option>
-                    <option value="Accepted">Accepted</option>
-                    <option value="Rejected">Rejected</option>
-                  </select>
+                  {app.status !== "Accepted" && app.status !== "Rejected" && (
+                    <select
+                      value={app.status}
+                      onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                      className="rounded-md border bg-background px-2 py-1 text-sm"
+                      disabled={updateStatus.status === "pending"}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Interview">Interview</option>
+                      <option value="Accepted">Accepted</option>
+                      <option value="Rejected">Rejected</option>
+                    </select>
+                  )}
                   <Badge variant={app.status === "Pending" ? "outline" : app.status === "Accepted" ? "default" : app.status === "Interview" ? "secondary" : "destructive"}>
                     {app.status}
                   </Badge>
