@@ -4,3 +4,5 @@ export * from "./register";
 export * from "./company";
 export * from "./profile";
 export * from "./jobs";
+export * from "./connections";
+export * from "./feed";

@@ -8,4 +8,8 @@ public class PostRecord
     public UserRecord? Author { get; set; }
     public int LikesCount { get; set; }
     public int CommentsCount { get; set; }
+    public bool IsLikedByMe { get; set; }
+    public List<string> ImageUrls { get; set; } = new();
+    public List<CommentRecord> Comments { get; set; } = new();
+    public DateTime CreatedAt { get; set; }
 }

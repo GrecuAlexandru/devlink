@@ -46,6 +46,8 @@ public static class WebApplicationBuilderExtensions
             .AddScoped<IUserProfileService, UserProfileService>()
             .AddScoped<IJobPostService, JobPostService>()
             .AddScoped<IApplicationService, ApplicationService>()
+            .AddScoped<IConnectionService, ConnectionService>()
+            .AddScoped<IPostService, PostService>()
             .AddScoped<ILoginService, LoginService>()
             .AddScoped<IFileRepository, FileRepository>()
             .AddScoped<IMailService, MailService>();

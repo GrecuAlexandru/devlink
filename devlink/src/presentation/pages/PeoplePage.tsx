@@ -1,18 +1,164 @@
 import { memo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useGetUsers } from "@/infrastructure/apis/api-management/profile";
+import { 
+  useGetMyConnections, 
+  useGetPendingRequests, 
+  useSendConnectionRequest, 
+  useAcceptConnection, 
+  useRejectConnection, 
+  useRemoveConnection,
+  useGetConnectionStatus
+} from "@/infrastructure/apis/api-management/connections";
 import { useOwnUser } from "@/infrastructure/hooks/useOwnUser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AppRoute } from "@/routes";
+
+const DiscoverCard = ({ user }: { user: any }) => {
+  const { data: statusData, isLoading: connectionLoading } = useGetConnectionStatus(user.id);
+  const sendRequest = useSendConnectionRequest();
+  
+  const status = statusData?.response;
+
+  return (
+    <Card className="transition hover:shadow-md">
+      <CardContent className="p-4 flex flex-col justify-between h-full space-y-4">
+        <Link to={`${AppRoute.Profile}/${user.id}`}>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-12 w-12">
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                {user.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-medium hover:underline">{user.name}</p>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
+        </Link>
+        
+        <div>
+          {connectionLoading ? (
+            <Button disabled variant="outline" className="w-full">Loading...</Button>
+          ) : status?.status === "Pending" ? (
+            <Button disabled variant="secondary" className="w-full">Request Sent / Pending</Button>
+          ) : status?.status === "Accepted" ? (
+            <Button disabled variant="outline" className="w-full text-green-600 border-green-600">Connected</Button>
+          ) : (
+             <Button 
+               className="w-full" 
+               onClick={() => sendRequest.mutate(user.id)}
+               disabled={sendRequest.isPending}
+             >
+               {sendRequest.isPending ? "Sending..." : "Connect"}
+             </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const ConnectionCard = ({ connection }: { connection: any }) => {
+  const currentUser = useOwnUser();
+  const removeConnection = useRemoveConnection();
+  
+  const isRequester = connection.requesterId === currentUser?.id;
+  const otherUser = isRequester ? connection.receiver : connection.requester;
+  
+  if (!otherUser) return null;
+
+  return (
+    <Card className="transition hover:shadow-md">
+      <CardContent className="p-4 flex items-center justify-between">
+        <Link to={`${AppRoute.Profile}/${otherUser.id}`}>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                {otherUser.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-medium hover:underline">{otherUser.name}</p>
+              <p className="text-sm text-muted-foreground">{otherUser.email}</p>
+            </div>
+          </div>
+        </Link>
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={() => removeConnection.mutate(connection.id)}
+          disabled={removeConnection.isPending}
+        >
+          Remove
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+const PendingRequestCard = ({ request }: { request: any }) => {
+  const acceptRequest = useAcceptConnection();
+  const rejectRequest = useRejectConnection();
+
+  const requester = request.requester;
+  if (!requester) return null;
+
+  return (
+    <Card className="transition hover:shadow-md">
+      <CardContent className="p-4 flex items-center justify-between">
+        <Link to={`${AppRoute.Profile}/${requester.id}`}>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                {requester.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-medium hover:underline">{requester.name}</p>
+              <p className="text-sm text-muted-foreground">{requester.email}</p>
+            </div>
+          </div>
+        </Link>
+        <div className="flex gap-2">
+          <Button 
+            variant="default" 
+            size="sm"
+            onClick={() => acceptRequest.mutate(request.id)}
+            disabled={acceptRequest.isPending || rejectRequest.isPending}
+          >
+            Accept
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => rejectRequest.mutate(request.id)}
+            disabled={acceptRequest.isPending || rejectRequest.isPending}
+          >
+            Decline
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export const PeoplePage = memo(() => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const { data, isLoading } = useGetUsers(page, search);
+  
+  const { data: usersData, isLoading: usersLoading } = useGetUsers(page, search);
+  const { data: connectionsData, isLoading: connectionsLoading } = useGetMyConnections();
+  const { data: pendingData, isLoading: pendingLoading } = useGetPendingRequests();
+  
   const currentUser = useOwnUser();
-  const users = (data?.response?.data ?? []).filter((user: { id: string }) => user.id !== currentUser?.id);
+  const users = (usersData?.response?.data ?? []).filter((user: { id: string }) => user.id !== currentUser?.id);
+  const connections = connectionsData?.response ?? [];
+  const pendingRequests = pendingData?.response ?? [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,45 +168,68 @@ export const PeoplePage = memo(() => {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">People</h1>
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <Input
-            placeholder="Search people..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-64"
-          />
-          <Button type="submit">Search</Button>
-        </form>
+        <h1 className="text-3xl font-bold">Network</h1>
       </div>
 
-      {isLoading ? (
-        <p className="text-center text-muted-foreground">Loading...</p>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {users.map((user: { id: string; name: string; email: string; role: string }) => (
-            <Link key={user.id} to={`${AppRoute.Profile}/${user.id}`}>
-              <Card className="cursor-pointer transition hover:shadow-md">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
+      <Tabs defaultValue="discover" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="discover">Discover</TabsTrigger>
+          <TabsTrigger value="connections">My Connections ({connections.length})</TabsTrigger>
+          <TabsTrigger value="requests">Requests ({pendingRequests.length})</TabsTrigger>
+        </TabsList>
 
-      {users.length === 0 && !isLoading && (
-        <p className="text-center text-muted-foreground">No people found.</p>
-      )}
+        <TabsContent value="discover" className="space-y-6">
+          <form onSubmit={handleSearch} className="flex gap-2 max-w-md">
+            <Input
+              placeholder="Search people..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <Button type="submit">Search</Button>
+          </form>
+
+          {usersLoading ? (
+            <p className="text-muted-foreground">Loading people...</p>
+          ) : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {users.map((user: any) => (
+                  <DiscoverCard key={user.id} user={user} />
+                ))}
+              </div>
+              {users.length === 0 && <p className="text-muted-foreground">No people found.</p>}
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="connections" className="space-y-4">
+          {connectionsLoading ? (
+            <p className="text-muted-foreground">Loading connections...</p>
+          ) : connections.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {connections.map((conn: any) => (
+                <ConnectionCard key={conn.id} connection={conn} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">You don't have any connections yet.</p>
+          )}
+        </TabsContent>
+
+        <TabsContent value="requests" className="space-y-4">
+          {pendingLoading ? (
+            <p className="text-muted-foreground">Loading requests...</p>
+          ) : pendingRequests.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {pendingRequests.map((req: any) => (
+                <PendingRequestCard key={req.id} request={req} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No pending requests.</p>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 });

@@ -1,4 +1,4 @@
-﻿using MobyLabWebProgramming.Database.Repository.Enums;
+using MobyLabWebProgramming.Database.Repository.Enums;
 using MobyLabWebProgramming.Infrastructure.BaseObjects;
 
 namespace MobyLabWebProgramming.Database.Repository.Entities;
@@ -23,4 +23,8 @@ public class User : BaseEntity
     // For company owners
     public Guid? CompanyId { get; set; }
     public Company? Company { get; set; }
+
+    // For connections
+    public ICollection<Connection> SentConnections { get; set; } = null!;
+    public ICollection<Connection> ReceivedConnections { get; set; } = null!;
 }

@@ -1,4 +1,4 @@
-﻿using MobyLabWebProgramming.Infrastructure.BaseObjects;
+using MobyLabWebProgramming.Infrastructure.BaseObjects;
 
 namespace MobyLabWebProgramming.Database.Repository.Entities;
 
@@ -11,4 +11,5 @@ public class Post : BaseEntity
 
     public ICollection<Comment> Comments { get; set; } = null!;
     public ICollection<PostLike> Likes { get; set; } = null!;
+    public ICollection<PostImage> Images { get; set; } = null!;
 }
