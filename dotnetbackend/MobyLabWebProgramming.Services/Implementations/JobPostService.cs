@@ -38,7 +38,7 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
 
     public async Task<ServiceResponse<List<JobPostRecord>>> GetAllJobs(CancellationToken cancellationToken = default)
     {
-        var jobs = await repository.ListAsync(new AllJobPostsSpec(), cancellationToken);
+        var jobs = await repository.ListAsync(new JobPostWithCompanySpecAll(), cancellationToken);
 
         return ServiceResponse.ForSuccess(jobs.Select(j => new JobPostRecord
         {
@@ -50,7 +50,17 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             Level = j.Level,
             Type = j.Type,
             IsRecruiterPosition = j.IsRecruiterPosition,
-            CompanyId = j.CompanyId
+            CompanyId = j.CompanyId,
+            Company = j.Company == null
+                ? null
+                : new CompanyRecord
+                {
+                    Id = j.Company.Id,
+                    Name = j.Company.Name,
+                    Industry = j.Company.Industry,
+                    Website = j.Company.Website,
+                    Description = j.Company.Description
+                }
         }).ToList());
     }
 

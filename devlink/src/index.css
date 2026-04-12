@@ -122,9 +122,25 @@
     @apply border-border outline-ring/50;
     }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     }
   html {
     @apply font-sans;
     }
+}
+
+@layer components {
+  .app-shell-bg {
+    background-image:
+      radial-gradient(900px 500px at -10% -15%, rgb(37 99 235 / 0.12), transparent 60%),
+      radial-gradient(750px 420px at 110% -20%, rgb(16 185 129 / 0.1), transparent 55%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  .dark .app-shell-bg {
+    background-image:
+      radial-gradient(900px 500px at -10% -15%, rgb(37 99 235 / 0.18), transparent 60%),
+      radial-gradient(750px 420px at 110% -20%, rgb(16 185 129 / 0.14), transparent 55%);
+  }
 }

@@ -14,7 +14,7 @@ import {
 import { useOwnUser } from "@/infrastructure/hooks/useOwnUser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AppRoute } from "@/routes";
@@ -26,8 +26,8 @@ const DiscoverCard = ({ user }: { user: any }) => {
   const status = statusData?.response;
 
   return (
-    <Card className="transition hover:shadow-md">
-      <CardContent className="p-4 flex flex-col justify-between h-full space-y-4">
+    <Card className="border-border/70 transition-all hover:-translate-y-0.5 hover:shadow-md">
+      <CardContent className="flex h-full flex-col justify-between space-y-4 p-4">
         <Link to={`${AppRoute.Profile}/${user.id}`}>
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
@@ -75,8 +75,8 @@ const ConnectionCard = ({ connection }: { connection: any }) => {
   if (!otherUser) return null;
 
   return (
-    <Card className="transition hover:shadow-md">
-      <CardContent className="p-4 flex items-center justify-between">
+    <Card className="border-border/70 transition-all hover:shadow-md">
+      <CardContent className="flex items-center justify-between p-4">
         <Link to={`${AppRoute.Profile}/${otherUser.id}`}>
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -116,8 +116,8 @@ const PendingRequestCard = ({ request }: { request: any }) => {
   if (!requester) return null;
 
   return (
-    <Card className="transition hover:shadow-md">
-      <CardContent className="p-4 flex items-center justify-between">
+    <Card className="border-border/70 transition-all hover:shadow-md">
+      <CardContent className="flex items-center justify-between p-4">
         <Link to={`${AppRoute.Profile}/${requester.id}`}>
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -186,13 +186,16 @@ export const PeoplePage = memo(() => {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Network</h1>
-      </div>
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
+      <Card className="border-border/70 bg-card/80">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-3xl tracking-tight">Network</CardTitle>
+          <CardDescription>Discover developers, manage your connections, and respond to requests.</CardDescription>
+        </CardHeader>
+      </Card>
 
       <Tabs defaultValue="discover" className="space-y-6">
-        <TabsList>
+        <TabsList className="grid h-auto w-full max-w-2xl grid-cols-3">
           <TabsTrigger value="discover">Discover</TabsTrigger>
           <TabsTrigger value="connections">My Connections ({connections.length})</TabsTrigger>
           <TabsTrigger value="requests">Requests ({pendingRequests.length})</TabsTrigger>

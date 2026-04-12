@@ -27,13 +27,13 @@ export function Navbar() {
   };
 
   return (
-    <div className="w-full border-b bg-background">
+    <div className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/85 backdrop-blur">
       <div className="mx-auto max-w-7xl px-4">
-        <NavigationMenu className="h-14">
-          <NavigationMenuList>
+        <NavigationMenu className="h-14 w-full max-w-none justify-start">
+          <NavigationMenuList className="w-full gap-1">
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <Link to={AppRoute.Index} className={navigationMenuTriggerStyle()}>
+                <Link to={AppRoute.Index} className={`${navigationMenuTriggerStyle()} font-semibold tracking-tight`}>
                   DevLink
                 </Link>
               </NavigationMenuLink>
@@ -87,7 +87,7 @@ export function Navbar() {
               </>
             ))}
 
-            <NavigationMenuItem className="ml-auto flex gap-1">
+            <NavigationMenuItem className="ml-auto flex items-center gap-1">
               {!loggedIn ? (
                 <>
                   <NavigationMenuLink asChild>

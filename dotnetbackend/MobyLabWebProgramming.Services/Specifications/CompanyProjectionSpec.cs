@@ -6,7 +6,15 @@ namespace MobyLabWebProgramming.Services.Specifications;
 
 public sealed class CompanyProjectionSpec : Specification<Company, CompanyRecord>
 {
-    public CompanyProjectionSpec(Guid id) => Query.Where(e => e.Id == id);
+    public CompanyProjectionSpec() => Query.Select(e => new CompanyRecord
+    {
+        Id = e.Id,
+        Name = e.Name,
+        Industry = e.Industry,
+        Website = e.Website,
+        Description = e.Description
+    });
 
-    public CompanyProjectionSpec() { }
+    public CompanyProjectionSpec(Guid id) : this() => Query.Where(e => e.Id == id);
+
 }

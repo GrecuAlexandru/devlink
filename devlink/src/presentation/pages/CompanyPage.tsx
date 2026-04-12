@@ -156,7 +156,7 @@ const CompanyDetailsCard = ({ company, isReadonly }: { company: any; isReadonly:
 
   return (
     <Card className="overflow-hidden">
-      <div className="h-32 bg-linear-to-r from-emerald-600 to-teal-600" />
+      <div className="h-14 border-b bg-muted/40" />
       <CardContent className="relative px-6 pb-6">
         <div className="-mt-12 mb-6 flex items-end gap-4">
           <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-background shadow-sm">
@@ -282,7 +282,7 @@ const CompanyMembersList = ({ companyId, isReadonly }: { companyId: string; isRe
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={member.role === "CompanyAdmin" ? "default" : member.role === "Recruiter" ? "secondary" : "outline"}>
-                  {member.role === "CompanyAdmin" ? "Owner" : member.role}
+                  {member.role === "CompanyAdmin" ? "Owner" : member.role === "Client" ? "Employee" : member.role}
                 </Badge>
                 {!isReadonly && isOwner && member.role !== "CompanyAdmin" && (
                   <Button variant="destructive" size="icon" onClick={() => handleRemove(member.userId)} disabled={removeMember.status === "pending"}>

@@ -9,7 +9,6 @@ import { toast } from "react-toastify";
 export type ProfileFormModel = {
   name: string;
   bio?: string;
-  profilePictureUrl?: string;
   linkedInUrl?: string;
   gitHubUrl?: string;
 };
@@ -18,7 +17,6 @@ const useInitProfileForm = (initialData?: ProfileFormModel) => {
   const defaultValues: ProfileFormModel = {
     name: initialData?.name || "",
     bio: initialData?.bio || "",
-    profilePictureUrl: initialData?.profilePictureUrl || "",
     linkedInUrl: initialData?.linkedInUrl || "",
     gitHubUrl: initialData?.gitHubUrl || "",
   };
@@ -26,7 +24,6 @@ const useInitProfileForm = (initialData?: ProfileFormModel) => {
   const schema = yup.object().shape({
     name: yup.string().required("Name is required!").min(2, "Name must be at least 2 characters!"),
     bio: yup.string(),
-    profilePictureUrl: yup.string().url("Invalid URL format!"),
     linkedInUrl: yup.string().url("Invalid URL format!"),
     gitHubUrl: yup.string().url("Invalid URL format!"),
   });
@@ -63,7 +60,6 @@ export const useProfileFormController = (): ProfileFormController => {
   const initialData: ProfileFormModel = {
     name: user?.name || "",
     bio: profileData?.response?.bio || "",
-    profilePictureUrl: profileData?.response?.profilePictureUrl || "",
     linkedInUrl: profileData?.response?.linkedInUrl || "",
     gitHubUrl: profileData?.response?.gitHubUrl || "",
   };
@@ -85,7 +81,6 @@ export const useProfileFormController = (): ProfileFormController => {
       reset({
         name: user?.name || "",
         bio: profileData?.response?.bio || "",
-        profilePictureUrl: profileData?.response?.profilePictureUrl || "",
         linkedInUrl: profileData?.response?.linkedInUrl || "",
         gitHubUrl: profileData?.response?.gitHubUrl || "",
       });
@@ -103,7 +98,6 @@ export const useProfileFormController = (): ProfileFormController => {
           await updateProfile({
             id: profileId,
             bio: data.bio,
-            profilePictureUrl: data.profilePictureUrl,
             linkedInUrl: data.linkedInUrl,
             gitHubUrl: data.gitHubUrl,
           });
@@ -111,7 +105,6 @@ export const useProfileFormController = (): ProfileFormController => {
           await updateProfile({
             id: userId,
             bio: data.bio,
-            profilePictureUrl: data.profilePictureUrl,
             linkedInUrl: data.linkedInUrl,
             gitHubUrl: data.gitHubUrl,
           });

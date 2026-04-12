@@ -16,7 +16,10 @@ public sealed class ApplicationByUserSpec : Specification<Application>
 
 public sealed class ApplicationByJobSpec : Specification<Application>
 {
-    public ApplicationByJobSpec(Guid jobPostId) => Query.Where(e => e.JobPostId == jobPostId).OrderByDescending(e => e.CreatedAt);
+    public ApplicationByJobSpec(Guid jobPostId) => Query
+        .Where(e => e.JobPostId == jobPostId)
+        .OrderByDescending(e => e.CreatedAt)
+        .Include(e => e.User);
 }
 
 public sealed class AllJobPostsSpec : Specification<JobPost>
@@ -36,6 +39,15 @@ public sealed class JobPostWithCompanySpecAll : Specification<JobPost>
 
 public sealed class ApplicationProjectionSpec : Specification<Application, ApplicationRecord>
 {
-    public ApplicationProjectionSpec(Guid id) => Query.Where(e => e.Id == id);
-    public ApplicationProjectionSpec() { }
+    public ApplicationProjectionSpec() => Query.Select(e => new ApplicationRecord
+    {
+        Id = e.Id,
+        Status = e.Status,
+        CoverLetter = e.CoverLetter,
+        ExpectedSalary = e.ExpectedSalary,
+        UserId = e.UserId,
+        JobPostId = e.JobPostId
+    });
+
+    public ApplicationProjectionSpec(Guid id) : this() => Query.Where(e => e.Id == id);
 }

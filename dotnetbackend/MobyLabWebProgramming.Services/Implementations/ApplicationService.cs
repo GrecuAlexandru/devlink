@@ -59,6 +59,15 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository, I
             CoverLetter = a.CoverLetter,
             ExpectedSalary = a.ExpectedSalary,
             UserId = a.UserId,
+            User = a.User == null
+                ? null
+                : new UserRecord
+                {
+                    Id = a.User.Id,
+                    Name = a.User.Name,
+                    Email = a.User.Email,
+                    Role = a.User.Role
+                },
             JobPostId = a.JobPostId
         }).ToList());
     }

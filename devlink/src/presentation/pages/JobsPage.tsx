@@ -1,19 +1,23 @@
-import { memo, useState } from "react";
+import { memo, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useOwnUser } from "@/infrastructure/hooks/useOwnUser";
 import { useGetMyCompanyJobs, useCreateJob, useUpdateJob, useDeleteJob, useGetAllJobs, useApplyToJob, useGetMyApplications, useGetJobApplications, useUpdateApplicationStatus } from "@/infrastructure/apis/api-management/jobs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, MapPin, DollarSign, Briefcase, CheckCircle, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Pencil, Trash2, MapPin, DollarSign, Briefcase, CheckCircle, Users, ChevronDown, ChevronUp, Building2, ExternalLink, FileText, UserRound } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { useCallback, useEffect } from "react";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { AppRoute } from "@/routes";
 
 type JobFormModel = {
   title: string;
@@ -213,12 +217,27 @@ const UserJobsView = () => {
   const { data: applicationsData } = useGetMyApplications();
   const jobs = jobsData?.response ?? [];
   const applications = applicationsData?.response ?? [];
-  const appliedJobIds = new Set(applications.map((a: { jobPostId: string }) => a.jobPostId));
+  const appliedJobIds = useMemo(() => new Set(applications.map((a: { jobPostId: string }) => a.jobPostId)), [applications]);
   const [applyingJob, setApplyingJob] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
+  const jobsById = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const job of jobs) {
+      map.set(job.id, job);
+    }
+    return map;
+  }, [jobs]);
 
-  const filteredJobs = jobs.filter((job: { title?: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; company?: { name?: string } }) => {
+  const filteredJobs = jobs.filter((job: {
+    title?: string;
+    description?: string;
+    location?: string;
+    salaryRange?: string;
+    level?: string;
+    type?: string;
+    company?: { id?: string; name?: string; description?: string; website?: string; industry?: string };
+  }) => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return true;
 
@@ -229,7 +248,9 @@ const UserJobsView = () => {
       job.salaryRange?.toLowerCase().includes(term) ||
       job.level?.toLowerCase().includes(term) ||
       job.type?.toLowerCase().includes(term) ||
-      job.company?.name?.toLowerCase().includes(term)
+      job.company?.name?.toLowerCase().includes(term) ||
+      job.company?.industry?.toLowerCase().includes(term) ||
+      job.company?.description?.toLowerCase().includes(term)
     );
   });
 
@@ -241,17 +262,26 @@ const UserJobsView = () => {
     setPage(1);
   }, [searchTerm, jobs.length]);
 
+  const statusVariant = (status: string): "outline" | "default" | "secondary" | "destructive" => {
+    if (status === "Pending") return "outline";
+    if (status === "Accepted") return "default";
+    if (status === "Interview") return "secondary";
+    return "destructive";
+  };
+
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Available Jobs</h1>
-        <p className="text-muted-foreground">Browse and apply for open positions</p>
-      </div>
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      <Card className="mb-6 border-border/70 bg-card/90 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-2xl">Find Your Next Role</CardTitle>
+          <CardDescription>Browse roles with full context: company, responsibilities, and requirements.</CardDescription>
+        </CardHeader>
+      </Card>
 
       {isLoading ? (
         <p className="text-center text-muted-foreground">Loading jobs...</p>
       ) : jobs.length === 0 ? (
-        <Card>
+        <Card className="border-border/70">
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">No job postings available.</p>
           </CardContent>
@@ -263,40 +293,72 @@ const UserJobsView = () => {
               placeholder="Search jobs by title, company, location, type..."
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              className="sm:max-w-md"
+              className="sm:max-w-lg"
             />
             <p className="text-sm text-muted-foreground">{filteredJobs.length} matching jobs</p>
           </div>
 
           {filteredJobs.length === 0 ? (
-            <Card>
+            <Card className="border-border/70">
               <CardContent className="pt-6">
                 <p className="text-center text-muted-foreground">No jobs match your search.</p>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-4">
-              {paginatedJobs.map((job: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; isRecruiterPosition?: boolean; company?: { name: string } }) => {
-            const hasApplied = appliedJobIds.has(job.id);
+              {paginatedJobs.map((job: {
+                id: string;
+                title: string;
+                description?: string;
+                location?: string;
+                salaryRange?: string;
+                level?: string;
+                type?: string;
+                isRecruiterPosition?: boolean;
+                company?: { id?: string; name?: string; description?: string; website?: string; industry?: string };
+              }) => {
+                const hasApplied = appliedJobIds.has(job.id);
 
-            return (
-              <Card key={job.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle>{job.title}</CardTitle>
-                      {job.company && <p className="text-sm text-muted-foreground">{job.company.name}</p>}
-                      <div className="mt-2 flex flex-wrap gap-2">
+                return (
+                  <Card key={job.id} className="border-border/70 bg-card/90 transition-all hover:shadow-md">
+                    <CardHeader className="space-y-3 pb-2">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{job.company?.name ?? "Unknown company"}</p>
+                          <CardTitle className="text-xl leading-tight">{job.title}</CardTitle>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {job.company?.industry && <Badge variant="secondary">{job.company.industry}</Badge>}
+                            {job.isRecruiterPosition && <Badge variant="secondary">Recruiter Position</Badge>}
+                          </div>
+                        </div>
+
+                        {hasApplied ? (
+                          <Badge className="gap-1 bg-green-600">
+                            <CheckCircle className="h-3 w-3" />
+                            Applied
+                          </Badge>
+                        ) : (
+                          <Dialog open={applyingJob === job.id} onOpenChange={(open) => setApplyingJob(open ? job.id : null)}>
+                            <DialogTrigger asChild>
+                              <Button>Apply</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Apply to {job.title}</DialogTitle>
+                              </DialogHeader>
+                              <ApplyForm jobId={job.id} onSuccess={() => setApplyingJob(null)} />
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
                         {job.location && (
-                          <Badge variant="secondary" className="gap-1">
+                          <Badge variant="outline" className="gap-1">
                             <MapPin className="h-3 w-3" />
                             {job.location}
-                          </Badge>
-                        )}
-                        {job.salaryRange && (
-                          <Badge variant="secondary" className="gap-1">
-                            <DollarSign className="h-3 w-3" />
-                            {job.salaryRange}
                           </Badge>
                         )}
                         {job.level && (
@@ -305,37 +367,43 @@ const UserJobsView = () => {
                             {job.level}
                           </Badge>
                         )}
-                        {job.type && <Badge>{job.type}</Badge>}
-                        {job.isRecruiterPosition && <Badge variant="secondary">Recruiter</Badge>}
+                        {job.type && <Badge variant="outline">{job.type}</Badge>}
+                        {job.salaryRange && (
+                          <Badge variant="outline" className="gap-1">
+                            <DollarSign className="h-3 w-3" />
+                            {job.salaryRange}
+                          </Badge>
+                        )}
                       </div>
-                    </div>
-                    {hasApplied ? (
-                      <Badge className="gap-1 bg-green-600">
-                        <CheckCircle className="h-3 w-3" />
-                        Applied
-                      </Badge>
-                    ) : (
-                      <Dialog open={applyingJob === job.id} onOpenChange={(open) => setApplyingJob(open ? job.id : null)}>
-                        <DialogTrigger asChild>
-                          <Button>Apply Now</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Apply to {job.title}</DialogTitle>
-                          </DialogHeader>
-                          <ApplyForm jobId={job.id} onSuccess={() => setApplyingJob(null)} />
-                        </DialogContent>
-                      </Dialog>
-                    )}
-                  </div>
-                </CardHeader>
-                {job.description && (
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{job.description}</p>
-                  </CardContent>
-                )}
-              </Card>
-            );
+
+                      {job.description && (
+                        <div className="rounded-md border border-border/70 bg-muted/30 p-3">
+                          <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <FileText className="h-3.5 w-3.5" />
+                            About this role
+                          </p>
+                          <p className="text-sm text-muted-foreground">{job.description}</p>
+                        </div>
+                      )}
+
+                      {(job.company?.description || job.company?.id) && (
+                        <div className="rounded-md border border-border/70 p-3">
+                          <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <Building2 className="h-3.5 w-3.5" />
+                            Company
+                          </p>
+                          {job.company?.description && <p className="text-sm text-muted-foreground">{job.company.description}</p>}
+                          {job.company?.id && (
+                            <Link to={`${AppRoute.Company}/${job.company.id}`} className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                              Open company page
+                              <ExternalLink className="h-3 w-3" />
+                            </Link>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
               })}
             </div>
           )}
@@ -354,38 +422,40 @@ const UserJobsView = () => {
         </>
       )}
 
-      <div className="mt-8">
-        <h2 className="mb-4 text-xl font-bold">My Applications</h2>
+      <div className="mt-8 space-y-4">
+        <h2 className="text-xl font-bold">My Applications</h2>
         {applications.length === 0 ? (
-          <Card>
+          <Card className="border-border/70">
             <CardContent className="pt-6">
               <p className="text-center text-muted-foreground">You haven't applied to any jobs yet.</p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-4">
-            {applications.map((app: { id: string; jobPostId: string; status: string; coverLetter?: string; expectedSalary?: number }) => (
-              <Card key={app.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg">
-                        {jobs.find((j: { id: string }) => j.id === app.jobPostId)?.title ?? "Unknown Job"}
-                      </CardTitle>
+            {applications.map((app: { id: string; jobPostId: string; status: string; coverLetter?: string; expectedSalary?: number }) => {
+              const job = jobsById.get(app.jobPostId);
+              return (
+                <Card key={app.id} className="border-border/70 bg-card/90">
+                  <CardHeader className="pb-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <CardTitle className="text-lg">{job?.title ?? "Unknown Job"}</CardTitle>
+                        <CardDescription>{job?.company?.name ?? "Unknown company"}</CardDescription>
+                      </div>
+                      <Badge variant={statusVariant(app.status)}>{app.status}</Badge>
                     </div>
-                    <Badge variant={app.status === "Pending" ? "outline" : app.status === "Accepted" ? "default" : "destructive"}>
-                      {app.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                {app.coverLetter && (
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{app.coverLetter}</p>
-                    {app.expectedSalary && <p className="mt-1 text-sm text-muted-foreground">Expected salary: ${app.expectedSalary.toLocaleString()}</p>}
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                      {job?.location && <span>Location: {job.location}</span>}
+                      {job?.type && <span>Type: {job.type}</span>}
+                      {app.expectedSalary && <span>Expected: ${app.expectedSalary.toLocaleString()}</span>}
+                    </div>
+                    {app.coverLetter && <p className="rounded-md border border-border/70 bg-muted/30 p-3 text-sm text-muted-foreground">{app.coverLetter}</p>}
                   </CardContent>
-                )}
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
@@ -471,7 +541,7 @@ const JobForm = ({ job, isCompanyAdmin, onSuccess }: { job?: { id: string; title
       </div>
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
-        <Input id="description" {...register("description")} />
+        <Textarea id="description" {...register("description")} placeholder="Describe responsibilities, requirements, and team context..." className="min-h-24" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
@@ -561,7 +631,7 @@ const ApplyForm = ({ jobId, onSuccess }: { jobId: string; onSuccess: () => void 
     <form onSubmit={handleSubmit(submit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="coverLetter">Cover Letter</Label>
-        <Input id="coverLetter" {...register("coverLetter")} placeholder="Tell us why you're a great fit..." />
+        <Textarea id="coverLetter" {...register("coverLetter")} placeholder="Tell us why you're a great fit..." className="min-h-24" />
         {errors.coverLetter && <p className="text-sm text-destructive">{errors.coverLetter.message}</p>}
       </div>
       <div className="space-y-2">
@@ -644,37 +714,53 @@ const JobApplicationsView = ({ jobPostId }: { jobPostId: string }) => {
     <div className="border-t px-6 pb-4 pt-4">
       <h3 className="mb-3 text-sm font-semibold">Applications ({applications.length})</h3>
       <div className="space-y-3">
-        {applications.map((app: { id: string; userId: string; status: string; coverLetter?: string; expectedSalary?: number }) => (
-          <Card key={app.id}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Applicant ID: {app.userId}</p>
-                  {app.coverLetter && <p className="mt-1 text-sm text-muted-foreground">{app.coverLetter}</p>}
-                  {app.expectedSalary && <p className="mt-1 text-sm text-muted-foreground">Expected salary: ${app.expectedSalary.toLocaleString()}</p>}
+        {applications.map((app: { id: string; userId: string; status: string; coverLetter?: string; expectedSalary?: number; user?: { id: string; name: string; email: string } }) => {
+          const applicantName = app.user?.name || `Applicant ${app.userId.slice(0, 8)}`;
+          const applicantInitial = applicantName.charAt(0).toUpperCase();
+
+          return (
+            <Card key={app.id} className="border-border/70 bg-card/90">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-1 items-start gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">{applicantInitial}</AvatarFallback>
+                    </Avatar>
+
+                    <div className="space-y-1">
+                      <Link to={`${AppRoute.Profile}/${app.userId}`} className="inline-flex items-center gap-1 text-sm font-medium hover:underline">
+                        {applicantName}
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                      <p className="text-xs text-muted-foreground">{app.user?.email || "No public email"}</p>
+                      {app.coverLetter && <p className="mt-2 text-sm text-muted-foreground">{app.coverLetter}</p>}
+                      {app.expectedSalary && <p className="text-sm text-muted-foreground">Expected salary: ${app.expectedSalary.toLocaleString()}</p>}
+                    </div>
+                  </div>
+
+                  <div className="ml-2 flex items-center gap-2">
+                    {app.status !== "Accepted" && app.status !== "Rejected" && (
+                      <select
+                        value={app.status}
+                        onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                        className="rounded-md border bg-background px-2 py-1 text-sm"
+                        disabled={updateStatus.status === "pending"}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Interview">Interview</option>
+                        <option value="Accepted">Accepted</option>
+                        <option value="Rejected">Rejected</option>
+                      </select>
+                    )}
+                    <Badge variant={app.status === "Pending" ? "outline" : app.status === "Accepted" ? "default" : app.status === "Interview" ? "secondary" : "destructive"}>
+                      {app.status}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="ml-4 flex items-center gap-2">
-                  {app.status !== "Accepted" && app.status !== "Rejected" && (
-                    <select
-                      value={app.status}
-                      onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                      className="rounded-md border bg-background px-2 py-1 text-sm"
-                      disabled={updateStatus.status === "pending"}
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Interview">Interview</option>
-                      <option value="Accepted">Accepted</option>
-                      <option value="Rejected">Rejected</option>
-                    </select>
-                  )}
-                  <Badge variant={app.status === "Pending" ? "outline" : app.status === "Accepted" ? "default" : app.status === "Interview" ? "secondary" : "destructive"}>
-                    {app.status}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
