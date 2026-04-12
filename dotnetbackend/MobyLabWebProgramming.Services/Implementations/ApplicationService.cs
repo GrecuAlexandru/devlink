@@ -111,6 +111,29 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository) :
         application.Status = status;
         await repository.UpdateAsync(application, cancellationToken);
 
+        if (status == ApplicationStatusEnum.Accepted)
+        {
+            var user = await repository.GetAsync(new UserSpec(application.UserId), cancellationToken);
+            if (user != null)
+            {
+                var existingMember = await repository.GetAsync(new CompanyMemberByUserSpec(application.UserId, company.Id), cancellationToken);
+                if (existingMember == null)
+                {
+                    var role = jobPost.IsRecruiterPosition ? UserRoleEnum.Recruiter : UserRoleEnum.Client;
+                    user.Role = role;
+                    await repository.UpdateAsync(user, cancellationToken);
+
+                    var newMember = new CompanyMember
+                    {
+                        UserId = application.UserId,
+                        CompanyId = company.Id,
+                        Role = role
+                    };
+                    await repository.AddAsync(newMember, cancellationToken);
+                }
+            }
+        }
+
         return ServiceResponse.ForSuccess();
     }
 }

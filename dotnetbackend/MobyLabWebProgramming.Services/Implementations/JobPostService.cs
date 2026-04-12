@@ -31,6 +31,7 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             SalaryRange = result.SalaryRange,
             Level = result.Level,
             Type = result.Type,
+            IsRecruiterPosition = result.IsRecruiterPosition,
             CompanyId = result.CompanyId
         });
     }
@@ -48,6 +49,7 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             SalaryRange = j.SalaryRange,
             Level = j.Level,
             Type = j.Type,
+            IsRecruiterPosition = j.IsRecruiterPosition,
             CompanyId = j.CompanyId
         }).ToList());
     }
@@ -65,6 +67,7 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             SalaryRange = j.SalaryRange,
             Level = j.Level,
             Type = j.Type,
+            IsRecruiterPosition = j.IsRecruiterPosition,
             CompanyId = j.CompanyId
         }).ToList());
     }
@@ -80,11 +83,18 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
         return await GetCompanyJobs(company.Id, cancellationToken);
     }
 
+    private bool IsCompanyMember(UserRoleEnum role) => role == UserRoleEnum.CompanyAdmin || role == UserRoleEnum.Recruiter;
+
     public async Task<ServiceResponse> AddJobPost(JobPostAddRecord jobPost, UserRecord requestingUser, CancellationToken cancellationToken = default)
     {
-        if (requestingUser.Role != UserRoleEnum.CompanyAdmin)
+        if (!IsCompanyMember(requestingUser.Role))
         {
-            return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "Only company admins can create job posts!", ErrorCodes.CannotAdd));
+            return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "Only company members can create job posts!", ErrorCodes.CannotAdd));
+        }
+
+        if (jobPost.IsRecruiterPosition && requestingUser.Role != UserRoleEnum.CompanyAdmin)
+        {
+            return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "Only company admins can create recruiter positions!", ErrorCodes.CannotAdd));
         }
 
         var company = await repository.GetAsync(new CompanyByUserSpec(requestingUser.Id), cancellationToken);
@@ -101,6 +111,7 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             SalaryRange = jobPost.SalaryRange,
             Level = jobPost.Level,
             Type = jobPost.Type,
+            IsRecruiterPosition = jobPost.IsRecruiterPosition,
             CompanyId = company.Id
         };
 
@@ -124,12 +135,18 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "You can only update your own company's job posts!", ErrorCodes.CannotUpdate));
         }
 
+        if (!IsCompanyMember(requestingUser.Role))
+        {
+            return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "Only company members can update job posts!", ErrorCodes.CannotUpdate));
+        }
+
         entity.Title = jobPost.Title ?? entity.Title;
         entity.Description = jobPost.Description ?? entity.Description;
         entity.Location = jobPost.Location ?? entity.Location;
         entity.SalaryRange = jobPost.SalaryRange ?? entity.SalaryRange;
         entity.Level = jobPost.Level ?? entity.Level;
         entity.Type = jobPost.Type ?? entity.Type;
+        entity.IsRecruiterPosition = jobPost.IsRecruiterPosition ?? entity.IsRecruiterPosition;
 
         await repository.UpdateAsync(entity, cancellationToken);
 
@@ -149,6 +166,11 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
         if (company == null || entity.CompanyId != company.Id)
         {
             return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "You can only delete your own company's job posts!", ErrorCodes.CannotDelete));
+        }
+
+        if (!IsCompanyMember(requestingUser.Role))
+        {
+            return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "Only company members can delete job posts!", ErrorCodes.CannotDelete));
         }
 
         await repository.DeleteAsync<JobPost>(id, cancellationToken);

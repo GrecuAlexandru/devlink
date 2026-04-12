@@ -22,6 +22,7 @@ type JobFormModel = {
   salaryRange?: string;
   level?: string;
   type?: string;
+  isRecruiterPosition?: boolean;
 };
 
 type ApplyFormModel = {
@@ -31,9 +32,9 @@ type ApplyFormModel = {
 
 export const JobsPage = memo(() => {
   const user = useOwnUser();
-  const isCompanyAdmin = user?.role === "CompanyAdmin";
+  const isCompanyMember = user?.role === "CompanyAdmin" || user?.role === "Recruiter";
 
-  if (isCompanyAdmin) {
+  if (isCompanyMember) {
     return <CompanyJobsView />;
   }
 
@@ -46,6 +47,9 @@ const CompanyJobsView = () => {
   const [editingJob, setEditingJob] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
+  const user = useOwnUser();
+  const isCompanyAdmin = user?.role === "CompanyAdmin";
+  const isCompanyMember = user?.role === "CompanyAdmin" || user?.role === "Recruiter";
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -65,7 +69,7 @@ const CompanyJobsView = () => {
             <DialogHeader>
               <DialogTitle>Create New Job</DialogTitle>
             </DialogHeader>
-            <JobForm onSuccess={() => setIsCreateOpen(false)} />
+            <JobForm onSuccess={() => setIsCreateOpen(false)} isCompanyAdmin={isCompanyAdmin} />
           </DialogContent>
         </Dialog>
       </div>
@@ -80,7 +84,7 @@ const CompanyJobsView = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {jobs.map((job: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string }) => (
+          {jobs.map((job: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; isRecruiterPosition?: boolean }) => (
             <Card key={job.id}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -119,7 +123,7 @@ const CompanyJobsView = () => {
                         <DialogHeader>
                           <DialogTitle>Edit Job</DialogTitle>
                         </DialogHeader>
-                        <JobForm job={job} onSuccess={() => setEditingJob(null)} />
+                        <JobForm job={job} isCompanyAdmin={isCompanyAdmin} onSuccess={() => setEditingJob(null)} />
                       </DialogContent>
                     </Dialog>
                     <DeleteJobButton id={job.id} />
@@ -172,7 +176,7 @@ const UserJobsView = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {jobs.map((job: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; company?: { name: string } }) => {
+          {jobs.map((job: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; isRecruiterPosition?: boolean; company?: { name: string } }) => {
             const hasApplied = appliedJobIds.has(job.id);
 
             return (
@@ -202,6 +206,7 @@ const UserJobsView = () => {
                           </Badge>
                         )}
                         {job.type && <Badge>{job.type}</Badge>}
+                        {job.isRecruiterPosition && <Badge variant="secondary">Recruiter</Badge>}
                       </div>
                     </div>
                     {hasApplied ? (
@@ -274,7 +279,7 @@ const UserJobsView = () => {
   );
 };
 
-const JobForm = ({ job, onSuccess }: { job?: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string }; onSuccess: () => void }) => {
+const JobForm = ({ job, isCompanyAdmin, onSuccess }: { job?: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; isRecruiterPosition?: boolean }; isCompanyAdmin: boolean; onSuccess: () => void }) => {
   const createJob = useCreateJob();
   const updateJob = useUpdateJob();
   const queryClient = useQueryClient();
@@ -287,12 +292,14 @@ const JobForm = ({ job, onSuccess }: { job?: { id: string; title: string; descri
     salaryRange: yup.string(),
     level: yup.string(),
     type: yup.string(),
+    isRecruiterPosition: yup.boolean(),
   });
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<JobFormModel>({
     defaultValues: {
@@ -302,9 +309,12 @@ const JobForm = ({ job, onSuccess }: { job?: { id: string; title: string; descri
       salaryRange: job?.salaryRange || "",
       level: job?.level || "",
       type: job?.type || "",
+      isRecruiterPosition: job?.isRecruiterPosition || false,
     },
     resolver: yupResolver(schema),
   });
+
+  const isRecruiterPosition = watch("isRecruiterPosition");
 
   useEffect(() => {
     if (job) {
@@ -315,6 +325,7 @@ const JobForm = ({ job, onSuccess }: { job?: { id: string; title: string; descri
         salaryRange: job.salaryRange || "",
         level: job.level || "",
         type: job.type || "",
+        isRecruiterPosition: job.isRecruiterPosition || false,
       });
     }
   }, [job, reset]);
@@ -368,6 +379,19 @@ const JobForm = ({ job, onSuccess }: { job?: { id: string; title: string; descri
           <Input id="type" {...register("type")} placeholder="Full-time, Part-time, Contract" />
         </div>
       </div>
+      {isCompanyAdmin && (
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="isRecruiterPosition"
+            {...register("isRecruiterPosition")}
+            className="h-4 w-4 rounded border-gray-300"
+          />
+          <Label htmlFor="isRecruiterPosition" className="cursor-pointer">
+            Recruiter Position (only company admins can create)
+          </Label>
+        </div>
+      )}
       <div className="flex gap-2">
         <Button type="submit" disabled={createJob.status === "pending" || updateJob.status === "pending"}>
           {createJob.status === "pending" || updateJob.status === "pending" ? "Saving..." : isEditing ? "Update Job" : "Create Job"}

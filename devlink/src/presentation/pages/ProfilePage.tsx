@@ -7,7 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ExternalLink, Link as LinkIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ExternalLink, Link as LinkIcon, Building2 } from "lucide-react";
 
 export const ProfilePage = memo(() => {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +25,8 @@ export const ProfilePage = memo(() => {
 const OwnProfileView = () => {
   const { state, actions, computed } = useProfileFormController();
   const user = useOwnUser();
+  const isCompanyOwner = user?.role === "CompanyAdmin";
+  const isRecruiter = user?.role === "Recruiter";
 
   if (state.isLoading) {
     return <p className="text-center text-muted-foreground">Loading profile...</p>;
@@ -39,7 +42,21 @@ const OwnProfileView = () => {
               {user?.name?.charAt(0).toUpperCase() ?? "U"}
             </div>
             <div className="mb-1">
-              <h1 className="text-2xl font-bold">{user?.name}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold">{user?.name}</h1>
+                {isCompanyOwner && (
+                  <Badge className="gap-1 bg-emerald-600">
+                    <Building2 className="h-3 w-3" />
+                    Company Owner
+                  </Badge>
+                )}
+                {isRecruiter && (
+                  <Badge variant="secondary" className="gap-1">
+                    <Building2 className="h-3 w-3" />
+                    Recruiter
+                  </Badge>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground">{user?.email}</p>
             </div>
           </div>

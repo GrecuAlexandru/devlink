@@ -12,6 +12,7 @@ public sealed class WebAppDatabaseContext(DbContextOptions<WebAppDatabaseContext
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<UserProfile> UserProfiles { get; set; } = null!;
     public DbSet<Company> Companies { get; set; } = null!;
+    public DbSet<CompanyMember> CompanyMembers { get; set; } = null!;
     public DbSet<JobPost> JobPosts { get; set; } = null!;
     public DbSet<Application> Applications { get; set; } = null!;
     public DbSet<Post> Posts { get; set; } = null!;

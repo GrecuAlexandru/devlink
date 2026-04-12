@@ -42,6 +42,7 @@ public static class WebApplicationBuilderExtensions
         builder.Services
             .AddScoped<IUserService, UserService>()
             .AddScoped<ICompanyService, CompanyService>()
+            .AddScoped<ICompanyMemberService, CompanyMemberService>()
             .AddScoped<IUserProfileService, UserProfileService>()
             .AddScoped<IJobPostService, JobPostService>()
             .AddScoped<IApplicationService, ApplicationService>()

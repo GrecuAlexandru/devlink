@@ -17,7 +17,7 @@ export function Navbar() {
   const dispatch = useAppDispatch();
   const { redirectToHome } = useAppRouter();
   const user = useOwnUser();
-  const isCompanyAdmin = user?.role === "CompanyAdmin";
+  const isCompanyAdmin = user?.role === "CompanyAdmin" || user?.role === "Recruiter";
 
   const logout = () => {
     dispatch(resetProfile());

@@ -67,3 +67,90 @@ export const useUpdateCompany = () => {
     },
   });
 };
+
+export const useGetCompanyMembers = () => {
+  return useQuery({
+    queryKey: ["companyMembers"],
+    queryFn: async () => {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${basePath}/api/CompanyMember/GetMembers`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch members");
+      }
+
+      return response.json();
+    },
+  });
+};
+
+export const useAddCompanyMember = () => {
+  return useMutation({
+    mutationFn: async (data: { userId: string; role: string }) => {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${basePath}/api/CompanyMember/AddMember`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.errorMessage?.message || "Failed to add member");
+      }
+
+      return response.json();
+    },
+  });
+};
+
+export const useRemoveCompanyMember = () => {
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${basePath}/api/CompanyMember/RemoveMember/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.errorMessage?.message || "Failed to remove member");
+      }
+
+      return response.json();
+    },
+  });
+};
+
+export const useUpdateMemberRole = () => {
+  return useMutation({
+    mutationFn: async (data: { userId: string; role: string }) => {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${basePath}/api/CompanyMember/UpdateMemberRole`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.errorMessage?.message || "Failed to update member role");
+      }
+
+      return response.json();
+    },
+  });
+};

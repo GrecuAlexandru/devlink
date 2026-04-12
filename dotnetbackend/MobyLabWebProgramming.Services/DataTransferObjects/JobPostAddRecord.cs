@@ -8,5 +8,6 @@ public class JobPostAddRecord
     public string? SalaryRange { get; set; }
     public string? Level { get; set; }
     public string? Type { get; set; }
+    public bool IsRecruiterPosition { get; set; }
     public Guid CompanyId { get; set; }
 }

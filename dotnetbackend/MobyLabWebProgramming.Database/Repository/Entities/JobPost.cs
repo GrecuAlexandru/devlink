@@ -1,4 +1,4 @@
-﻿using MobyLabWebProgramming.Infrastructure.BaseObjects;
+using MobyLabWebProgramming.Infrastructure.BaseObjects;
 
 namespace MobyLabWebProgramming.Database.Repository.Entities;
 
@@ -10,7 +10,8 @@ public class JobPost : BaseEntity
     public string? SalaryRange { get; set; }
     public string? Level { get; set; }
     public string? Type { get; set; }
-    
+    public bool IsRecruiterPosition { get; set; }
+
     public Guid CompanyId { get; set; }
     public Company Company { get; set; } = null!;
 

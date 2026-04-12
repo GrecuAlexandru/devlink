@@ -21,7 +21,8 @@ export const UserRoleEnum = {
     Admin: 'Admin',
     Personnel: 'Personnel',
     Client: 'Client',
-    CompanyAdmin: 'CompanyAdmin'
+    CompanyAdmin: 'CompanyAdmin',
+    Recruiter: 'Recruiter'
 } as const;
 export type UserRoleEnum = typeof UserRoleEnum[keyof typeof UserRoleEnum];
 

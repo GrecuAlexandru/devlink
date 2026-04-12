@@ -7,4 +7,5 @@ public record JobPostUpdateRecord(
     string? Location = null,
     string? SalaryRange = null,
     string? Level = null,
-    string? Type = null);
+    string? Type = null,
+    bool? IsRecruiterPosition = null);

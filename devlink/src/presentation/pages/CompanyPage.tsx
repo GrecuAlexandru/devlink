@@ -1,10 +1,11 @@
-import { memo } from "react";
-import { useGetMyCompany, useUpdateCompany } from "@/infrastructure/apis/api-management/company";
+import { memo, useState } from "react";
+import { useGetMyCompany, useUpdateCompany, useGetCompanyMembers, useAddCompanyMember, useRemoveCompanyMember } from "@/infrastructure/apis/api-management/company";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Building2, Globe, Briefcase } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Building2, Globe, Briefcase, Users, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
@@ -24,6 +25,7 @@ export const CompanyPage = memo(() => {
   const { mutateAsync: updateCompany, status } = useUpdateCompany();
   const queryClient = useQueryClient();
   const company = companyData?.response;
+  const [showMembers, setShowMembers] = useState(false);
 
   const schema = yup.object().shape({
     name: yup.string().required("Company name is required!").min(2, "Name must be at least 2 characters!"),
@@ -98,7 +100,7 @@ export const CompanyPage = memo(() => {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
       <Card className="overflow-hidden">
         <div className="h-32 bg-gradient-to-r from-emerald-600 to-teal-600" />
         <CardContent className="relative px-6 pb-6">
@@ -152,6 +154,75 @@ export const CompanyPage = memo(() => {
           </form>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Members</CardTitle>
+              <CardDescription>Manage your company members</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setShowMembers(!showMembers)}>
+              {showMembers ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </div>
+        </CardHeader>
+        {showMembers && <CompanyMembersView />}
+      </Card>
     </div>
   );
 });
+
+const CompanyMembersView = () => {
+  const { data: membersData, isLoading } = useGetCompanyMembers();
+  const members = membersData?.response ?? [];
+  const removeMember = useRemoveCompanyMember();
+  const queryClient = useQueryClient();
+
+  const handleRemove = (userId: string) => {
+    removeMember.mutate(userId, {
+      onSuccess: () => {
+        toast.success("Member removed!");
+        queryClient.invalidateQueries({ queryKey: ["companyMembers"] });
+      },
+      onError: (error: unknown) => {
+        toast.error((error as Error)?.message || "Failed to remove member!");
+      },
+    });
+  };
+
+  if (isLoading) {
+    return <p className="px-6 text-sm text-muted-foreground">Loading members...</p>;
+  }
+
+  if (members.length === 0) {
+    return <p className="px-6 text-sm text-muted-foreground">No members yet.</p>;
+  }
+
+  return (
+    <CardContent className="pt-0">
+      <div className="space-y-3">
+        {members.map((member: { id: string; userId: string; role: string; user?: { name: string; email: string } }) => (
+          <Card key={member.id}>
+            <CardContent className="flex items-center justify-between p-4">
+              <div>
+                <p className="font-medium">{member.user?.name ?? "Unknown"}</p>
+                <p className="text-sm text-muted-foreground">{member.user?.email ?? ""}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={member.role === "CompanyAdmin" ? "default" : member.role === "Recruiter" ? "secondary" : "outline"}>
+                  {member.role === "CompanyAdmin" ? "Owner" : member.role}
+                </Badge>
+                {member.role !== "CompanyAdmin" && (
+                  <Button variant="destructive" size="icon" onClick={() => handleRemove(member.userId)} disabled={removeMember.status === "pending"}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </CardContent>
+  );
+};
