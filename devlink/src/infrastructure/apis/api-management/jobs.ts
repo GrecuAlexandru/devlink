@@ -111,7 +111,7 @@ export const useDeleteJob = () => {
 
 export const useApplyToJob = () => {
   return useMutation({
-    mutationFn: async (data: { jobPostId: string; coverLetter?: string; expectedSalary?: number }) => {
+    mutationFn: async (data: { jobPostId: string }) => {
       const token = localStorage.getItem("token");
       const response = await fetch(`${basePath}/api/Application/Apply`, {
         method: "POST",

@@ -51,13 +51,6 @@ export function Navbar() {
               <>
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
-                    <Link to={AppRoute.Feed} className={navigationMenuTriggerStyle()}>
-                      Feed
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
                     <Link to={AppRoute.Jobs} className={navigationMenuTriggerStyle()}>
                       Jobs
                     </Link>

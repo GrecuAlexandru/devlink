@@ -2,7 +2,6 @@ import { ToastNotifier } from "@/presentation/components/ui/ToastNotifier";
 import { HomePage } from "@/presentation/pages/HomePage";
 import { LoginPage } from "@/presentation/pages/LoginPage";
 import { RegisterPage } from "@/presentation/pages/RegisterPage";
-import { FeedPage } from "@/presentation/pages/FeedPage";
 import { JobsPage } from "@/presentation/pages/JobsPage";
 import { ApplicationsPage } from "@/presentation/pages/ApplicationsPage";
 import { FeedbackPage } from "@/presentation/pages/FeedbackPage";
@@ -29,7 +28,6 @@ function App() {
             <Route path={AppRoute.Index} element={<HomePage />} />
             <Route path={AppRoute.Login} element={<LoginPage />} />
             <Route path={AppRoute.Register} element={<RegisterPage />} />
-            {loggedIn && <Route path={AppRoute.Feed} element={<FeedPage />} />}
             {loggedIn && <Route path={AppRoute.Jobs} element={<JobsPage />} />}
             {loggedIn && <Route path={AppRoute.Applications} element={<ApplicationsPage />} />}
             {loggedIn && <Route path={AppRoute.Feedback} element={<FeedbackPage />} />}

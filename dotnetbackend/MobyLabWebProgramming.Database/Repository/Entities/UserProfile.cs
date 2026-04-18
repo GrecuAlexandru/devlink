@@ -4,7 +4,6 @@ namespace MobyLabWebProgramming.Database.Repository.Entities;
 
 public class UserProfile : BaseEntity
 {
-    public string? Bio { get; set; }
     public string? ProfilePictureUrl { get; set; }
     public string? LinkedInUrl { get; set; }
     public string? GitHubUrl { get; set; }

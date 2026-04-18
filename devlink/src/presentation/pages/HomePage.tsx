@@ -1,62 +1,42 @@
 import { memo } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { BriefcaseBusiness, Code2, Users } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAppSelector } from "@/application/store";
+import { FeedPage } from "@/presentation/pages/FeedPage";
+import { AppRoute } from "@/routes";
+import { Button } from "@/components/ui/button";
+import { Briefcase, Users, Building, MessageSquare } from "lucide-react";
 
 export const HomePage = memo(() => {
+  const { loggedIn } = useAppSelector((x) => x.profileReducer);
+
+  if (loggedIn) {
+    return <FeedPage />;
+  }
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-10">
-      <Card className="border-border/70 shadow-sm">
-        <CardHeader className="space-y-3">
-          <Badge variant="secondary" className="w-fit">Developer Network</Badge>
-          <CardTitle className="text-3xl tracking-tight">Welcome to DevLink</CardTitle>
-          <CardDescription className="max-w-2xl">
-            A professional networking space for developers, recruiters, and teams.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <p className="max-w-3xl text-muted-foreground">
-            DevLink is a professional networking platform designed specifically for developers.
-            Connect with other programmers, showcase your portfolio projects, and discover
-            job opportunities in the tech industry.
-          </p>
+    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 text-center">
+      <div className="max-w-3xl space-y-8">
+        <div className="space-y-4">
+          <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl text-primary">
+            Welcome to DevLink
+          </h1>
+        </div>
 
-          <Separator />
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className="border-border/70 bg-background/70">
-              <CardHeader className="pb-2">
-                <Code2 className="h-5 w-5 text-primary" />
-                <CardTitle className="text-base">Showcase Work</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">Publish posts, share code, and keep your profile up to date.</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/70 bg-background/70">
-              <CardHeader className="pb-2">
-                <Users className="h-5 w-5 text-primary" />
-                <CardTitle className="text-base">Build Connections</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">Discover developers and grow your professional network.</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/70 bg-background/70">
-              <CardHeader className="pb-2">
-                <BriefcaseBusiness className="h-5 w-5 text-primary" />
-                <CardTitle className="text-base">Find Opportunities</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">Apply to roles and track application progress from one place.</p>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 py-8">
+          <div className="flex flex-col items-center space-y-2 p-6 bg-card rounded-xl border shadow-sm">
+            <Users className="h-10 w-10 text-primary" />
+            <h3 className="font-semibold text-lg">Connect</h3>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex flex-col items-center space-y-2 p-6 bg-card rounded-xl border shadow-sm">
+            <Briefcase className="h-10 w-10 text-primary" />
+            <h3 className="font-semibold text-lg">Find Jobs</h3>
+          </div>
+          <div className="flex flex-col items-center space-y-2 p-6 bg-card rounded-xl border shadow-sm">
+            <Building className="h-10 w-10 text-primary" />
+            <h3 className="font-semibold text-lg">Companies</h3>
+          </div>
+        </div>
+      </div>
     </div>
   );
 });

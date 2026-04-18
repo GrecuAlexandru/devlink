@@ -1,12 +1,14 @@
 import { memo, useState, useRef, useEffect } from "react";
 import { useGetFeed, useCreatePost, useDeletePost, useLikePost, useUnlikePost, useAddComment, useDeleteComment, useUpdatePost } from "@/infrastructure/apis/api-management/feed";
 import { useOwnUser } from "@/infrastructure/hooks/useOwnUser";
+import { UserRoleEnum } from "@/infrastructure/apis/client";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Heart, MessageSquare, Trash2, Image as ImageIcon, Send, Pencil } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
 import { AppRoute } from "@/routes";
 
@@ -88,19 +90,35 @@ const PostCard = ({ post }: { post: any }) => {
             >
               <Pencil className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => {
-                if (window.confirm("Delete this post?")) {
-                  deletePost.mutate(post.id);
-                }
-              }}
-              disabled={deletePost.isPending}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  disabled={deletePost.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this post. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={deletePost.isPending}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deletePost.mutate(post.id)}
+                    disabled={deletePost.isPending}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         )}
       </CardHeader>
@@ -147,7 +165,7 @@ const PostCard = ({ post }: { post: any }) => {
         )}
       </CardContent>
       
-      <CardFooter className="bg-muted/50 p-3 flex flex-col gap-3">
+      <CardFooter className="p-3 flex flex-col gap-3">
         <div className="flex w-full justify-between items-center text-sm text-muted-foreground px-2">
           <span>{post.likesCount} {post.likesCount === 1 ? 'Like' : 'Likes'}</span>
           <span>{post.commentsCount} {post.commentsCount === 1 ? 'Comment' : 'Comments'}</span>
@@ -174,7 +192,7 @@ const PostCard = ({ post }: { post: any }) => {
       </CardFooter>
 
       {showComments && (
-        <div className="p-4 border-t bg-muted/20 space-y-4">
+        <div className="p-4 border-t space-y-4">
           <form onSubmit={handleAddComment} className="flex gap-2">
             <Input 
               value={commentText} 
@@ -197,25 +215,41 @@ const PostCard = ({ post }: { post: any }) => {
                     </AvatarFallback>
                   </Avatar>
                 </Link>
-                <div className="flex-1 bg-muted p-3 rounded-lg overflow-hidden group">
+                <div className="flex-1 p-3 rounded-lg overflow-hidden group">
                   <div className="flex justify-between items-start">
                     <Link to={comment.authorId === currentUser?.id ? AppRoute.Profile : `${AppRoute.Profile}/${comment.authorId}`}>
                       <p className="font-semibold text-sm hover:underline">{comment.author?.name}</p>
                     </Link>
                     {comment.authorId === currentUser?.id && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => {
-                          if (window.confirm("Delete this comment?")) {
-                            deleteComment.mutate(comment.id);
-                          }
-                        }}
-                        disabled={deleteComment.isPending}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                            disabled={deleteComment.isPending}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete comment?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel disabled={deleteComment.isPending}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteComment.mutate(comment.id)}
+                              disabled={deleteComment.isPending}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                   </div>
                   <p className="text-sm mt-1">{comment.content}</p>
@@ -230,12 +264,17 @@ const PostCard = ({ post }: { post: any }) => {
 };
 
 export const FeedPage = memo(() => {
+  const currentUser = useOwnUser();
   const { data: feedData, isLoading: feedLoading } = useGetFeed();
   const createPost = useCreatePost();
   
   const [content, setContent] = useState("");
   const [images, setImages] = useState<FileList | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  if (currentUser?.role === UserRoleEnum.Admin) {
+    return null;
+  }
 
   const posts = feedData?.response ?? [];
 
@@ -299,7 +338,7 @@ export const FeedPage = memo(() => {
             <PostCard key={post.id} post={post} />
           ))
         ) : (
-          <div className="text-center bg-muted/30 rounded-lg p-8">
+          <div className="text-center rounded-lg p-8">
             <h3 className="font-semibold mb-2">No posts yet</h3>
             <p className="text-sm text-muted-foreground">Connect with more people to see their posts here!</p>
           </div>

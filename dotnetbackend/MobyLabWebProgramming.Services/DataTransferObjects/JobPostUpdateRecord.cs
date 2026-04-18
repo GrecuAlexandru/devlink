@@ -5,7 +5,5 @@ public record JobPostUpdateRecord(
     string? Title = null,
     string? Description = null,
     string? Location = null,
-    string? SalaryRange = null,
-    string? Level = null,
-    string? Type = null,
+    int? Salary = null,
     bool? IsRecruiterPosition = null);

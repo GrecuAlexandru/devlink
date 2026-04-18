@@ -21,6 +21,12 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository, I
         {
             return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "Company admins cannot apply to jobs!", ErrorCodes.CannotAdd));
         }
+        
+        var companyId = await GetCompanyIdForUser(requestingUser.Id, cancellationToken);
+        if (companyId != null)
+        {
+            return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "You are already part of a company and cannot apply to other jobs!", ErrorCodes.CannotAdd));
+        }
 
         var jobPost = await repository.GetAsync(new JobPostSpec(application.JobPostId), cancellationToken);
         if (jobPost == null)
@@ -36,9 +42,7 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository, I
 
         var newApplication = new Application
         {
-            Status = ApplicationStatusEnum.Pending,
-            CoverLetter = application.CoverLetter,
-            ExpectedSalary = application.ExpectedSalary,
+            Status = ApplicationStatusEnum.InProgress,
             UserId = requestingUser.Id,
             JobPostId = application.JobPostId
         };
@@ -56,8 +60,6 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository, I
         {
             Id = a.Id,
             Status = a.Status,
-            CoverLetter = a.CoverLetter,
-            ExpectedSalary = a.ExpectedSalary,
             UserId = a.UserId,
             User = a.User == null
                 ? null
@@ -92,9 +94,16 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository, I
         {
             Id = a.Id,
             Status = a.Status,
-            CoverLetter = a.CoverLetter,
-            ExpectedSalary = a.ExpectedSalary,
             UserId = a.UserId,
+            User = a.User == null
+                ? null
+                : new UserRecord
+                {
+                    Id = a.User.Id,
+                    Name = a.User.Name,
+                    Email = a.User.Email,
+                    Role = a.User.Role
+                },
             JobPostId = a.JobPostId
         }).ToList());
     }
@@ -135,9 +144,9 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository, I
             return ServiceResponse.FromError(new(HttpStatusCode.Forbidden, "You cannot modify your own application state!", ErrorCodes.CannotUpdate));
         }
 
-        if (application.Status != ApplicationStatusEnum.Pending && status == ApplicationStatusEnum.Pending)
+        if (application.Status != ApplicationStatusEnum.InProgress && status == ApplicationStatusEnum.InProgress)
         {
-            return ServiceResponse.FromError(new(HttpStatusCode.BadRequest, "You cannot change the state back to Pending!", ErrorCodes.CannotUpdate));
+            return ServiceResponse.FromError(new(HttpStatusCode.BadRequest, "You cannot change the state back to InProgress!", ErrorCodes.CannotUpdate));
         }
 
         if (application.Status == ApplicationStatusEnum.Accepted || application.Status == ApplicationStatusEnum.Rejected)
@@ -155,7 +164,7 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository, I
             {
                 ApplicationStatusEnum.Accepted => "accepted",
                 ApplicationStatusEnum.Rejected => "rejected",
-                ApplicationStatusEnum.Pending => "pending",
+                ApplicationStatusEnum.InProgress => "in progress",
                 _ => "updated"
             };
             
@@ -192,6 +201,16 @@ public class ApplicationService(IRepository<WebAppDatabaseContext> repository, I
                         Role = role
                     };
                     await repository.AddAsync(newMember, cancellationToken);
+                }
+                
+                // When accepted, automatically delete all other pending applications for this user
+                var userApplications = await repository.ListAsync(new ApplicationByUserSpec(user.Id), cancellationToken);
+                foreach (var otherApp in userApplications)
+                {
+                    if (otherApp.Id != application.Id && otherApp.Status == ApplicationStatusEnum.InProgress)
+                    {
+                        await repository.DeleteAsync<Application>(otherApp.Id, cancellationToken);
+                    }
                 }
             }
         }

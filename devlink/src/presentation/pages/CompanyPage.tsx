@@ -17,8 +17,8 @@ import { useOwnUser } from "@/infrastructure/hooks/useOwnUser";
 
 type CompanyFormModel = {
   name: string;
-  industry: string;
-  website?: string;
+  
+  
   description?: string;
 };
 
@@ -103,8 +103,6 @@ const CompanyDetailsCard = ({ company, isReadonly }: { company: any; isReadonly:
 
   const schema = yup.object().shape({
     name: yup.string().required("Company name is required!").min(2, "Name must be at least 2 characters!"),
-    industry: yup.string().required("Industry is required!"),
-    website: yup.string().url("Invalid URL format!"),
     description: yup.string(),
   });
 
@@ -116,8 +114,8 @@ const CompanyDetailsCard = ({ company, isReadonly }: { company: any; isReadonly:
   } = useForm<CompanyFormModel>({
     defaultValues: {
       name: company?.name || "",
-      industry: company?.industry || "",
-      website: company?.website || "",
+      
+      
       description: company?.description || "",
     },
     resolver: yupResolver(schema),
@@ -127,8 +125,8 @@ const CompanyDetailsCard = ({ company, isReadonly }: { company: any; isReadonly:
     if (company) {
       reset({
         name: company.name || "",
-        industry: company.industry || "",
-        website: company.website || "",
+        
+        
         description: company.description || "",
       });
     }
@@ -156,44 +154,25 @@ const CompanyDetailsCard = ({ company, isReadonly }: { company: any; isReadonly:
 
   return (
     <Card className="overflow-hidden">
-      <div className="h-14 border-b bg-muted/40" />
-      <CardContent className="relative px-6 pb-6">
-        <div className="-mt-12 mb-6 flex items-end gap-4">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-background shadow-sm">
-            <Building2 className="h-10 w-10 text-primary" />
-          </div>
-          <div className="mb-1">
-            <h1 className="text-2xl font-bold">{company.name}</h1>
-            {company.industry && (
-              <p className="flex items-center gap-1 text-muted-foreground">
-                <Briefcase className="h-4 w-4" />
-                {company.industry}
-              </p>
-            )}
+      <CardContent className="px-6 pb-6 pt-6">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-24 w-24 items-center justify-center rounded-xl bg-muted shadow-sm">
+              <Building2 className="h-10 w-10 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold tracking-tight">{company.name}</h1>
+            </div>
           </div>
         </div>
 
         <form onSubmit={handleSubmit(submit)} className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-1">
             <div className="space-y-2">
               <Label htmlFor="name">Company Name</Label>
               <Input id="name" {...register("name")} disabled={isReadonly || !isOwner || status === "pending"} />
               {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
-              <Input id="industry" {...register("industry")} disabled={isReadonly || !isOwner || status === "pending"} />
-              {errors.industry && <p className="text-sm text-destructive">{errors.industry.message}</p>}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="website">
-              <Globe className="mr-1 inline h-4 w-4" />
-              Website
-            </Label>
-            <Input id="website" {...register("website")} disabled={isReadonly || !isOwner || status === "pending"} placeholder="https://company.com" />
-            {errors.website && <p className="text-sm text-destructive">{errors.website.message}</p>}
           </div>
 
           <div className="space-y-2">

@@ -19,9 +19,6 @@ public class ApplicationConfiguration : IEntityTypeConfiguration<Application>
             .HasMaxLength(50)
             .IsRequired();
         
-        builder.Property(e => e.CoverLetter)
-            .HasMaxLength(5000);
-        builder.Property(e => e.ExpectedSalary);
         builder.Property(e => e.CreatedAt)
             .IsRequired();
         

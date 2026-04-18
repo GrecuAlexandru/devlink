@@ -29,26 +29,15 @@ export function CreateCompanyForm({ className }: React.ComponentProps<"div">) {
               {state.errors.name && <p className="text-sm text-destructive">{state.errors.name.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
+              <Label htmlFor="description">Description</Label>
               <Input
-                id="industry"
+                id="description"
                 type="text"
-                placeholder="Technology"
-                {...actions.register("industry")}
+                placeholder="Software development agency"
+                {...actions.register("description")}
                 disabled={computed.isSubmitting}
               />
-              {state.errors.industry && <p className="text-sm text-destructive">{state.errors.industry.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                type="url"
-                placeholder="https://company.com"
-                {...actions.register("website")}
-                disabled={computed.isSubmitting}
-              />
-              {state.errors.website && <p className="text-sm text-destructive">{state.errors.website.message}</p>}
+              {state.errors.description && <p className="text-sm text-destructive">{state.errors.description.message}</p>}
             </div>
             <Button type="submit" disabled={computed.isSubmitting} className="w-full">
               {computed.isSubmitting ? "Creating..." : "Create Company"}

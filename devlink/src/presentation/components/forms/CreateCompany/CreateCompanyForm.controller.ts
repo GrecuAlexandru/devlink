@@ -9,21 +9,18 @@ import { useCreateCompany } from "@/infrastructure/apis/api-management";
 
 export type CreateCompanyFormModel = {
   name: string;
-  industry: string;
-  website?: string;
+  description: string;
 };
 
 const useInitCreateCompanyForm = () => {
   const defaultValues: CreateCompanyFormModel = {
     name: "",
-    industry: "",
-    website: "",
+    description: "",
   };
 
   const schema = yup.object().shape({
     name: yup.string().required("Company name is required!").min(2, "Name must be at least 2 characters!"),
-    industry: yup.string().required("Industry is required!"),
-    website: yup.string().url("Invalid URL format!"),
+    description: yup.string().required("Description is required!"),
   });
 
   const resolver = yupResolver(schema);

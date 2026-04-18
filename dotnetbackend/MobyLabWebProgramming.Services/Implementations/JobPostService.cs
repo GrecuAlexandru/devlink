@@ -28,9 +28,7 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             Title = result.Title,
             Description = result.Description,
             Location = result.Location,
-            SalaryRange = result.SalaryRange,
-            Level = result.Level,
-            Type = result.Type,
+            Salary = result.Salary,
             IsRecruiterPosition = result.IsRecruiterPosition,
             CompanyId = result.CompanyId
         });
@@ -46,9 +44,7 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             Title = j.Title,
             Description = j.Description,
             Location = j.Location,
-            SalaryRange = j.SalaryRange,
-            Level = j.Level,
-            Type = j.Type,
+            Salary = j.Salary,
             IsRecruiterPosition = j.IsRecruiterPosition,
             CompanyId = j.CompanyId,
             Company = j.Company == null
@@ -57,8 +53,6 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
                 {
                     Id = j.Company.Id,
                     Name = j.Company.Name,
-                    Industry = j.Company.Industry,
-                    Website = j.Company.Website,
                     Description = j.Company.Description
                 }
         }).ToList());
@@ -74,9 +68,7 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             Title = j.Title,
             Description = j.Description,
             Location = j.Location,
-            SalaryRange = j.SalaryRange,
-            Level = j.Level,
-            Type = j.Type,
+            Salary = j.Salary,
             IsRecruiterPosition = j.IsRecruiterPosition,
             CompanyId = j.CompanyId
         }).ToList());
@@ -135,9 +127,7 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
             Title = jobPost.Title,
             Description = jobPost.Description,
             Location = jobPost.Location,
-            SalaryRange = jobPost.SalaryRange,
-            Level = jobPost.Level,
-            Type = jobPost.Type,
+            Salary = jobPost.Salary,
             IsRecruiterPosition = jobPost.IsRecruiterPosition,
             CompanyId = companyId.Value
         };
@@ -170,9 +160,7 @@ public class JobPostService(IRepository<WebAppDatabaseContext> repository) : IJo
         entity.Title = jobPost.Title ?? entity.Title;
         entity.Description = jobPost.Description ?? entity.Description;
         entity.Location = jobPost.Location ?? entity.Location;
-        entity.SalaryRange = jobPost.SalaryRange ?? entity.SalaryRange;
-        entity.Level = jobPost.Level ?? entity.Level;
-        entity.Type = jobPost.Type ?? entity.Type;
+        entity.Salary = jobPost.Salary ?? entity.Salary;
         entity.IsRecruiterPosition = jobPost.IsRecruiterPosition ?? entity.IsRecruiterPosition;
 
         await repository.UpdateAsync(entity, cancellationToken);

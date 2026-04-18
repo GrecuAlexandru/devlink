@@ -47,8 +47,12 @@ export const ToastNotifier = () => {
       ) {
         const cloned = response.clone();
         const error = await cloned.json();
+        
+        // Suppress global errors for auth requests (login/register) to prevent duplicate toasts
+        const isAuthRequest = response.url.includes("/api/Authorization/Login") || response.url.includes("/api/Authorization/Register");
+        const isApplyRequest = response.url.includes("/api/Application/Apply");
 
-        if (error && is<ErrorResponse>(error)) {
+        if (error && is<ErrorResponse>(error) && !isAuthRequest && !isApplyRequest) {
           toast.error(`Error: ${getErrorMessage(error.errorMessage.code)}`);
         }
       }

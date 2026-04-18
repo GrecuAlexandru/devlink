@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 
 export type ProfileFormModel = {
   name: string;
-  bio?: string;
+  
   linkedInUrl?: string;
   gitHubUrl?: string;
 };
@@ -16,14 +16,14 @@ export type ProfileFormModel = {
 const useInitProfileForm = (initialData?: ProfileFormModel) => {
   const defaultValues: ProfileFormModel = {
     name: initialData?.name || "",
-    bio: initialData?.bio || "",
+    
     linkedInUrl: initialData?.linkedInUrl || "",
     gitHubUrl: initialData?.gitHubUrl || "",
   };
 
   const schema = yup.object().shape({
     name: yup.string().required("Name is required!").min(2, "Name must be at least 2 characters!"),
-    bio: yup.string(),
+    
     linkedInUrl: yup.string().url("Invalid URL format!"),
     gitHubUrl: yup.string().url("Invalid URL format!"),
   });
@@ -59,7 +59,7 @@ export const useProfileFormController = (): ProfileFormController => {
 
   const initialData: ProfileFormModel = {
     name: user?.name || "",
-    bio: profileData?.response?.bio || "",
+    
     linkedInUrl: profileData?.response?.linkedInUrl || "",
     gitHubUrl: profileData?.response?.gitHubUrl || "",
   };
@@ -80,7 +80,7 @@ export const useProfileFormController = (): ProfileFormController => {
     if (user || profileData?.response) {
       reset({
         name: user?.name || "",
-        bio: profileData?.response?.bio || "",
+        
         linkedInUrl: profileData?.response?.linkedInUrl || "",
         gitHubUrl: profileData?.response?.gitHubUrl || "",
       });
@@ -97,14 +97,14 @@ export const useProfileFormController = (): ProfileFormController => {
         if (profileId) {
           await updateProfile({
             id: profileId,
-            bio: data.bio,
+            
             linkedInUrl: data.linkedInUrl,
             gitHubUrl: data.gitHubUrl,
           });
         } else if (userId) {
           await updateProfile({
             id: userId,
-            bio: data.bio,
+            
             linkedInUrl: data.linkedInUrl,
             gitHubUrl: data.gitHubUrl,
           });

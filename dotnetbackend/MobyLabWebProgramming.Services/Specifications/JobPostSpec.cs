@@ -22,9 +22,7 @@ public sealed class JobPostProjectionSpec : Specification<JobPost, JobPostRecord
         Title = e.Title,
         Description = e.Description,
         Location = e.Location,
-        SalaryRange = e.SalaryRange,
-        Level = e.Level,
-        Type = e.Type,
+        Salary = e.Salary,
         IsRecruiterPosition = e.IsRecruiterPosition,
         CompanyId = e.CompanyId,
         Company = e.Company == null
@@ -33,8 +31,6 @@ public sealed class JobPostProjectionSpec : Specification<JobPost, JobPostRecord
             {
                 Id = e.Company.Id,
                 Name = e.Company.Name,
-                Industry = e.Company.Industry,
-                Website = e.Company.Website,
                 Description = e.Company.Description
             }
     });

@@ -2,8 +2,7 @@
 
 public enum ApplicationStatusEnum
 {
-    Pending,
-    Interview,
-    Rejected,
-    Accepted
+    InProgress,
+    Accepted,
+    Rejected
 }

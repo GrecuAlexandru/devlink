@@ -16,12 +16,6 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
             .HasMaxLength(255)
             .IsRequired();
         
-        builder.Property(e => e.Industry)
-            .HasMaxLength(255);
-        
-        builder.Property(e => e.Website)
-            .HasMaxLength(512);
-        
         builder.Property(e => e.Description)
             .HasMaxLength(2000);
         

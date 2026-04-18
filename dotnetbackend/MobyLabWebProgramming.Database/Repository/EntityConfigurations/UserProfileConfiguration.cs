@@ -12,9 +12,6 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
             .IsRequired();
 
         builder.HasKey(x => x.Id);
-
-        builder.Property(e => e.Bio)
-            .HasMaxLength(2000);
         
         builder.Property(e => e.ProfilePictureUrl)
             .HasMaxLength(512);

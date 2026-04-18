@@ -23,9 +23,7 @@ type JobFormModel = {
   title: string;
   description?: string;
   location?: string;
-  salaryRange?: string;
-  level?: string;
-  type?: string;
+  salary?: number;
   isRecruiterPosition?: boolean;
 };
 
@@ -35,6 +33,18 @@ type ApplyFormModel = {
 };
 
 const JOBS_PAGE_SIZE = 6;
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export const JobsPage = memo(() => {
   const user = useOwnUser();
@@ -58,7 +68,7 @@ const CompanyJobsView = () => {
   const user = useOwnUser();
   const isCompanyAdmin = user?.role === "CompanyAdmin";
 
-  const filteredJobs = jobs.filter((job: { title?: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string }) => {
+  const filteredJobs = jobs.filter((job: { title?: string; description?: string; location?: string; salary?: number }) => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return true;
 
@@ -66,9 +76,7 @@ const CompanyJobsView = () => {
       job.title?.toLowerCase().includes(term) ||
       job.description?.toLowerCase().includes(term) ||
       job.location?.toLowerCase().includes(term) ||
-      job.salaryRange?.toLowerCase().includes(term) ||
-      job.level?.toLowerCase().includes(term) ||
-      job.type?.toLowerCase().includes(term)
+      job.salary?.toString().includes(term)
     );
   });
 
@@ -115,7 +123,7 @@ const CompanyJobsView = () => {
         <>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Input
-              placeholder="Search jobs by title, location, level, type..."
+              placeholder="Search jobs by title, location, salary..."
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               className="sm:max-w-md"
@@ -131,7 +139,7 @@ const CompanyJobsView = () => {
             </Card>
           ) : (
             <div className="space-y-4">
-              {paginatedJobs.map((job: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; isRecruiterPosition?: boolean }) => (
+              {paginatedJobs.map((job: { id: string; title: string; description?: string; location?: string; salary?: number; isRecruiterPosition?: boolean }) => (
                 <Card key={job.id}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
@@ -144,19 +152,12 @@ const CompanyJobsView = () => {
                               {job.location}
                             </Badge>
                           )}
-                          {job.salaryRange && (
+                          {job.salary && (
                             <Badge variant="secondary" className="gap-1">
                               <DollarSign className="h-3 w-3" />
-                              {job.salaryRange}
+                              {job.salary}
                             </Badge>
                           )}
-                          {job.level && (
-                            <Badge variant="outline" className="gap-1">
-                              <Briefcase className="h-3 w-3" />
-                              {job.level}
-                            </Badge>
-                          )}
-                          {job.type && <Badge>{job.type}</Badge>}
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -233,9 +234,7 @@ const UserJobsView = () => {
     title?: string;
     description?: string;
     location?: string;
-    salaryRange?: string;
-    level?: string;
-    type?: string;
+    salary?: number;
     company?: { id?: string; name?: string; description?: string; website?: string; industry?: string };
   }) => {
     const term = searchTerm.trim().toLowerCase();
@@ -245,9 +244,7 @@ const UserJobsView = () => {
       job.title?.toLowerCase().includes(term) ||
       job.description?.toLowerCase().includes(term) ||
       job.location?.toLowerCase().includes(term) ||
-      job.salaryRange?.toLowerCase().includes(term) ||
-      job.level?.toLowerCase().includes(term) ||
-      job.type?.toLowerCase().includes(term) ||
+      job.salary?.toString().includes(term) ||
       job.company?.name?.toLowerCase().includes(term) ||
       job.company?.industry?.toLowerCase().includes(term) ||
       job.company?.description?.toLowerCase().includes(term)
@@ -262,10 +259,9 @@ const UserJobsView = () => {
     setPage(1);
   }, [searchTerm, jobs.length]);
 
-  const statusVariant = (status: string): "outline" | "default" | "secondary" | "destructive" => {
-    if (status === "Pending") return "outline";
+  const statusVariant = (status: string): "outline" | "default" | "destructive" => {
+    if (status === "InProgress") return "outline";
     if (status === "Accepted") return "default";
-    if (status === "Interview") return "secondary";
     return "destructive";
   };
 
@@ -311,94 +307,68 @@ const UserJobsView = () => {
                 title: string;
                 description?: string;
                 location?: string;
-                salaryRange?: string;
-                level?: string;
-                type?: string;
+                salary?: number;
                 isRecruiterPosition?: boolean;
                 company?: { id?: string; name?: string; description?: string; website?: string; industry?: string };
               }) => {
                 const hasApplied = appliedJobIds.has(job.id);
 
                 return (
-                  <Card key={job.id} className="border-border/70 bg-card/90 transition-all hover:shadow-md">
-                    <CardHeader className="space-y-3 pb-2">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{job.company?.name ?? "Unknown company"}</p>
-                          <CardTitle className="text-xl leading-tight">{job.title}</CardTitle>
-                          <div className="flex flex-wrap items-center gap-2">
+                  <Card key={job.id} className="border-border/50 transition-all hover:shadow-md">
+                    <CardContent className="pt-6 space-y-6">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <CardTitle className="text-2xl font-bold mb-1">{job.title}</CardTitle>
+                          <div className="flex items-center flex-wrap gap-2 text-sm text-muted-foreground">
+                            <span className="font-medium text-foreground">
+                              {job.company?.name ?? "Unknown company"}
+                            </span>
+                            {job.location && (
+                              <>
+                                <span> - </span>
+                                <span>{job.location}</span>
+                              </>
+                            )}
+                            {job.salary && (
+                              <>
+                                <span> - </span>
+                                <span>${job.salary}</span>
+                              </>
+                            )}
+                          </div>
+                          
+                          <div className="mt-4 flex flex-wrap gap-2">
                             {job.company?.industry && <Badge variant="secondary">{job.company.industry}</Badge>}
                             {job.isRecruiterPosition && <Badge variant="secondary">Recruiter Position</Badge>}
                           </div>
                         </div>
 
-                        {hasApplied ? (
-                          <Badge className="gap-1 bg-green-600">
-                            <CheckCircle className="h-3 w-3" />
-                            Applied
-                          </Badge>
-                        ) : (
-                          <Dialog open={applyingJob === job.id} onOpenChange={(open) => setApplyingJob(open ? job.id : null)}>
-                            <DialogTrigger asChild>
-                              <Button>Apply</Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Apply to {job.title}</DialogTitle>
-                              </DialogHeader>
-                              <ApplyForm jobId={job.id} onSuccess={() => setApplyingJob(null)} />
-                            </DialogContent>
-                          </Dialog>
-                        )}
+                        <div>
+                          {hasApplied ? (
+                            <Badge className="bg-green-600/10 text-green-700 border-0 px-3 py-1">
+                              Applied
+                            </Badge>
+                          ) : (
+                            <ApplyDirectButton jobId={job.id} onSuccess={() => setApplyingJob(null)} />
+                          )}
+                        </div>
                       </div>
-                    </CardHeader>
 
-                    <CardContent className="space-y-4">
-                      <div className="flex flex-wrap gap-2">
-                        {job.location && (
-                          <Badge variant="outline" className="gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {job.location}
-                          </Badge>
-                        )}
-                        {job.level && (
-                          <Badge variant="outline" className="gap-1">
-                            <Briefcase className="h-3 w-3" />
-                            {job.level}
-                          </Badge>
-                        )}
-                        {job.type && <Badge variant="outline">{job.type}</Badge>}
-                        {job.salaryRange && (
-                          <Badge variant="outline" className="gap-1">
-                            <DollarSign className="h-3 w-3" />
-                            {job.salaryRange}
-                          </Badge>
-                        )}
-                      </div>
+                      {(job.description || job.company?.description) && <div className="h-px bg-border/40" />}
 
                       {job.description && (
-                        <div className="rounded-md border border-border/70 bg-muted/30 p-3">
-                          <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            <FileText className="h-3.5 w-3.5" />
-                            About this role
-                          </p>
-                          <p className="text-sm text-muted-foreground">{job.description}</p>
+                        <div>
+                          <h3 className="font-semibold text-foreground mb-2">About the role</h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{job.description}</p>
                         </div>
                       )}
 
-                      {(job.company?.description || job.company?.id) && (
-                        <div className="rounded-md border border-border/70 p-3">
-                          <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            <Building2 className="h-3.5 w-3.5" />
-                            Company
-                          </p>
-                          {job.company?.description && <p className="text-sm text-muted-foreground">{job.company.description}</p>}
-                          {job.company?.id && (
-                            <Link to={`${AppRoute.Company}/${job.company.id}`} className="mt-2 inline-flex items-center gap-1 text-sm text-primary hover:underline">
-                              Open company page
-                              <ExternalLink className="h-3 w-3" />
-                            </Link>
-                          )}
+                      {job.company?.id && (
+                        <div className="pt-2">
+                          <Link to={`${AppRoute.Company}/${job.company.id}`} className="text-sm font-medium text-primary hover:underline flex items-center gap-1 w-fit">
+                            Open company page
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Link>
                         </div>
                       )}
                     </CardContent>
@@ -432,7 +402,7 @@ const UserJobsView = () => {
           </Card>
         ) : (
           <div className="space-y-4">
-            {applications.map((app: { id: string; jobPostId: string; status: string; coverLetter?: string; expectedSalary?: number }) => {
+            {applications.map((app: { id: string; jobPostId: string; status: string }) => {
               const job = jobsById.get(app.jobPostId);
               return (
                 <Card key={app.id} className="border-border/70 bg-card/90">
@@ -448,10 +418,7 @@ const UserJobsView = () => {
                   <CardContent className="space-y-2">
                     <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                       {job?.location && <span>Location: {job.location}</span>}
-                      {job?.type && <span>Type: {job.type}</span>}
-                      {app.expectedSalary && <span>Expected: ${app.expectedSalary.toLocaleString()}</span>}
                     </div>
-                    {app.coverLetter && <p className="rounded-md border border-border/70 bg-muted/30 p-3 text-sm text-muted-foreground">{app.coverLetter}</p>}
                   </CardContent>
                 </Card>
               );
@@ -463,7 +430,7 @@ const UserJobsView = () => {
   );
 };
 
-const JobForm = ({ job, isCompanyAdmin, onSuccess }: { job?: { id: string; title: string; description?: string; location?: string; salaryRange?: string; level?: string; type?: string; isRecruiterPosition?: boolean }; isCompanyAdmin: boolean; onSuccess: () => void }) => {
+const JobForm = ({ job, isCompanyAdmin, onSuccess }: { job?: { id: string; title: string; description?: string; location?: string; salary?: number; isRecruiterPosition?: boolean }; isCompanyAdmin: boolean; onSuccess: () => void }) => {
   const createJob = useCreateJob();
   const updateJob = useUpdateJob();
   const queryClient = useQueryClient();
@@ -473,9 +440,7 @@ const JobForm = ({ job, isCompanyAdmin, onSuccess }: { job?: { id: string; title
     title: yup.string().required("Title is required!").min(2, "Title must be at least 2 characters!"),
     description: yup.string(),
     location: yup.string(),
-    salaryRange: yup.string(),
-    level: yup.string(),
-    type: yup.string(),
+    salary: yup.number().nullable().transform((value, originalValue) => (String(originalValue).trim() === "" ? null : value)),
     isRecruiterPosition: yup.boolean(),
   });
 
@@ -490,9 +455,7 @@ const JobForm = ({ job, isCompanyAdmin, onSuccess }: { job?: { id: string; title
       title: job?.title || "",
       description: job?.description || "",
       location: job?.location || "",
-      salaryRange: job?.salaryRange || "",
-      level: job?.level || "",
-      type: job?.type || "",
+      salary: job?.salary || undefined,
       isRecruiterPosition: job?.isRecruiterPosition || false,
     },
     resolver: yupResolver(schema),
@@ -506,9 +469,7 @@ const JobForm = ({ job, isCompanyAdmin, onSuccess }: { job?: { id: string; title
         title: job.title,
         description: job.description || "",
         location: job.location || "",
-        salaryRange: job.salaryRange || "",
-        level: job.level || "",
-        type: job.type || "",
+        salary: job.salary || undefined,
         isRecruiterPosition: job.isRecruiterPosition || false,
       });
     }
@@ -549,18 +510,8 @@ const JobForm = ({ job, isCompanyAdmin, onSuccess }: { job?: { id: string; title
           <Input id="location" {...register("location")} placeholder="Remote, Bucharest, etc." />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="salaryRange">Salary Range</Label>
-          <Input id="salaryRange" {...register("salaryRange")} placeholder="$50k-$80k" />
-        </div>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="level">Level</Label>
-          <Input id="level" {...register("level")} placeholder="Junior, Mid, Senior" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="type">Type</Label>
-          <Input id="type" {...register("type")} placeholder="Full-time, Part-time, Contract" />
+          <Label htmlFor="salary">Salary</Label>
+          <Input id="salary" type="number" {...register("salary")} placeholder="60000" />
         </div>
       </div>
       {isCompanyAdmin && (
@@ -588,82 +539,43 @@ const JobForm = ({ job, isCompanyAdmin, onSuccess }: { job?: { id: string; title
   );
 };
 
-const ApplyForm = ({ jobId, onSuccess }: { jobId: string; onSuccess: () => void }) => {
+const ApplyDirectButton = ({ jobId, onSuccess }: { jobId: string; onSuccess: () => void }) => {
   const applyToJob = useApplyToJob();
   const queryClient = useQueryClient();
 
-  const schema = yup.object().shape({
-    coverLetter: yup.string(),
-    expectedSalary: yup.string(),
-  });
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ApplyFormModel>({
-    defaultValues: {
-      coverLetter: "",
-      expectedSalary: "",
-    },
-    resolver: yupResolver(schema),
-  });
-
-  const submit = useCallback(
-    (data: ApplyFormModel) => {
-      return applyToJob.mutateAsync({ jobPostId: jobId, coverLetter: data.coverLetter, expectedSalary: data.expectedSalary ? parseFloat(data.expectedSalary) : undefined })
-        .then(async () => {
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ["myApplications"] }),
-            queryClient.invalidateQueries({ queryKey: ["allJobs"] }),
-          ]);
-          toast.success("Application submitted!");
-          onSuccess();
-        })
-        .catch((error: unknown) => {
-          toast.error((error as Error)?.message || "Failed to apply!");
-        });
-    },
-    [applyToJob, jobId, onSuccess, queryClient]
-  );
+  const handleApply = useCallback(() => {
+    applyToJob.mutateAsync({ jobPostId: jobId })
+      .then(async () => {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["myApplications"] }),
+          queryClient.invalidateQueries({ queryKey: ["allJobs"] }),
+        ]);
+        toast.success("Application submitted!");
+        onSuccess();
+      })
+      .catch((error: unknown) => {
+        toast.error((error as Error)?.message || "Failed to apply!");
+      });
+  }, [applyToJob, jobId, onSuccess, queryClient]);
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="coverLetter">Cover Letter</Label>
-        <Textarea id="coverLetter" {...register("coverLetter")} placeholder="Tell us why you're a great fit..." className="min-h-24" />
-        {errors.coverLetter && <p className="text-sm text-destructive">{errors.coverLetter.message}</p>}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="expectedSalary">Expected Salary</Label>
-        <Input id="expectedSalary" {...register("expectedSalary")} placeholder="$60,000" />
-        {errors.expectedSalary && <p className="text-sm text-destructive">{errors.expectedSalary.message}</p>}
-      </div>
-      <div className="flex gap-2">
-        <Button type="submit" disabled={applyToJob.status === "pending"}>
-          {applyToJob.status === "pending" ? "Submitting..." : "Submit Application"}
-        </Button>
-        <Button type="button" variant="outline" onClick={onSuccess}>
-          Cancel
-        </Button>
-      </div>
-    </form>
+    <Button onClick={handleApply} disabled={applyToJob.status === "pending"}>
+      {applyToJob.status === "pending" ? "Applying..." : "Apply Directly"}
+    </Button>
   );
 };
 
 const DeleteJobButton = ({ id }: { id: string }) => {
   const deleteJob = useDeleteJob();
   const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
 
   const handleDelete = () => {
-    if (!window.confirm("Delete this job posting?")) {
-      return;
-    }
-
     deleteJob.mutate(id, {
       onSuccess: () => {
         toast.success("Job deleted!");
         queryClient.invalidateQueries({ queryKey: ["myCompanyJobs"] });
+        setOpen(false);
       },
       onError: (error: unknown) => {
         toast.error((error as Error)?.message || "Failed to delete job!");
@@ -672,9 +584,27 @@ const DeleteJobButton = ({ id }: { id: string }) => {
   };
 
   return (
-    <Button variant="destructive" size="icon" onClick={handleDelete} disabled={deleteJob.status === "pending"}>
-      <Trash2 className="h-4 w-4" />
-    </Button>
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant="destructive" size="icon" disabled={deleteJob.status === "pending"}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently delete this job posting. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleteJob.status === "pending"}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} disabled={deleteJob.status === "pending"}>
+            {deleteJob.status === "pending" ? "Deleting..." : "Delete"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 
@@ -714,7 +644,7 @@ const JobApplicationsView = ({ jobPostId }: { jobPostId: string }) => {
     <div className="border-t px-6 pb-4 pt-4">
       <h3 className="mb-3 text-sm font-semibold">Applications ({applications.length})</h3>
       <div className="space-y-3">
-        {applications.map((app: { id: string; userId: string; status: string; coverLetter?: string; expectedSalary?: number; user?: { id: string; name: string; email: string } }) => {
+        {applications.map((app: { id: string; userId: string; status: string; user?: { id: string; name: string; email: string } }) => {
           const applicantName = app.user?.name || `Applicant ${app.userId.slice(0, 8)}`;
           const applicantInitial = applicantName.charAt(0).toUpperCase();
 
@@ -733,28 +663,36 @@ const JobApplicationsView = ({ jobPostId }: { jobPostId: string }) => {
                         <ExternalLink className="h-3 w-3" />
                       </Link>
                       <p className="text-xs text-muted-foreground">{app.user?.email || "No public email"}</p>
-                      {app.coverLetter && <p className="mt-2 text-sm text-muted-foreground">{app.coverLetter}</p>}
-                      {app.expectedSalary && <p className="text-sm text-muted-foreground">Expected salary: ${app.expectedSalary.toLocaleString()}</p>}
                     </div>
                   </div>
 
                   <div className="ml-2 flex items-center gap-2">
-                    {app.status !== "Accepted" && app.status !== "Rejected" && (
-                      <select
-                        value={app.status}
-                        onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                        className="rounded-md border bg-background px-2 py-1 text-sm"
-                        disabled={updateStatus.status === "pending"}
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Interview">Interview</option>
-                        <option value="Accepted">Accepted</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
+                    {app.status === "InProgress" || app.status === "Pending" || app.status === "Interview" ? (
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          className="bg-green-600 hover:bg-green-700 h-8"
+                          onClick={() => handleStatusChange(app.id, "Accepted")}
+                          disabled={updateStatus.status === "pending"}
+                        >
+                          Approve
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          className="h-8"
+                          onClick={() => handleStatusChange(app.id, "Rejected")}
+                          disabled={updateStatus.status === "pending"}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    ) : (
+                      <Badge variant={app.status === "Accepted" ? "default" : "destructive"}>
+                        {app.status}
+                      </Badge>
                     )}
-                    <Badge variant={app.status === "Pending" ? "outline" : app.status === "Accepted" ? "default" : app.status === "Interview" ? "secondary" : "destructive"}>
-                      {app.status}
-                    </Badge>
                   </div>
                 </div>
               </CardContent>

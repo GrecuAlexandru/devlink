@@ -43,8 +43,6 @@ public sealed class ApplicationProjectionSpec : Specification<Application, Appli
     {
         Id = e.Id,
         Status = e.Status,
-        CoverLetter = e.CoverLetter,
-        ExpectedSalary = e.ExpectedSalary,
         UserId = e.UserId,
         JobPostId = e.JobPostId
     });

@@ -27,7 +27,6 @@ public class UserProfileService(IRepository<WebAppDatabaseContext> repository) :
             return ServiceResponse.ForSuccess(new UserProfileRecord
             {
                 Id = Guid.Empty,
-                Bio = null,
                 ProfilePictureUrl = null,
                 LinkedInUrl = null,
                 GitHubUrl = null,
@@ -38,7 +37,6 @@ public class UserProfileService(IRepository<WebAppDatabaseContext> repository) :
         return ServiceResponse.ForSuccess(new UserProfileRecord
         {
             Id = profile.Id,
-            Bio = profile.Bio,
             ProfilePictureUrl = profile.ProfilePictureUrl,
             LinkedInUrl = profile.LinkedInUrl,
             GitHubUrl = profile.GitHubUrl,
@@ -67,7 +65,6 @@ public class UserProfileService(IRepository<WebAppDatabaseContext> repository) :
 
         var newProfile = new UserProfile
         {
-            Bio = profile.Bio,
             ProfilePictureUrl = profile.ProfilePictureUrl,
             LinkedInUrl = profile.LinkedInUrl,
             GitHubUrl = profile.GitHubUrl,
@@ -93,7 +90,6 @@ public class UserProfileService(IRepository<WebAppDatabaseContext> repository) :
         {
             var newProfile = new UserProfile
             {
-                Bio = profile.Bio,
                 ProfilePictureUrl = profile.ProfilePictureUrl,
                 LinkedInUrl = profile.LinkedInUrl,
                 GitHubUrl = profile.GitHubUrl,
@@ -103,7 +99,6 @@ public class UserProfileService(IRepository<WebAppDatabaseContext> repository) :
         }
         else
         {
-            existingProfile.Bio = profile.Bio ?? existingProfile.Bio;
             existingProfile.ProfilePictureUrl = profile.ProfilePictureUrl ?? existingProfile.ProfilePictureUrl;
             existingProfile.LinkedInUrl = profile.LinkedInUrl ?? existingProfile.LinkedInUrl;
             existingProfile.GitHubUrl = profile.GitHubUrl ?? existingProfile.GitHubUrl;

@@ -47,8 +47,7 @@ export const ApplicationsPage = memo(() => {
       application.jobTitle.toLowerCase().includes(term) ||
       application.status.toLowerCase().includes(term) ||
       application.location.toLowerCase().includes(term) ||
-      application.type.toLowerCase().includes(term) ||
-      application.coverLetter?.toLowerCase().includes(term)
+      application.type.toLowerCase().includes(term)
     );
   }, [normalizedApplications, search]);
 
@@ -95,24 +94,20 @@ export const ApplicationsPage = memo(() => {
                       <p className="font-medium">{application.jobTitle}</p>
                       <Badge
                         variant={
-                          application.status === "Pending"
+                          application.status === "InProgress"
                             ? "outline"
                             : application.status === "Accepted"
                               ? "default"
-                              : application.status === "Interview"
-                                ? "secondary"
-                                : "destructive"
+                              : "destructive"
                         }
                       >
                         {application.status}
                       </Badge>
                     </div>
-                    <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
+                    <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
                       <p>Location: {application.location}</p>
                       <p>Type: {application.type}</p>
-                      <p>Expected salary: {application.expectedSalary ? `$${application.expectedSalary.toLocaleString()}` : "N/A"}</p>
                     </div>
-                    {application.coverLetter && <p className="text-sm">{application.coverLetter}</p>}
                   </CardContent>
                 </Card>
               ))}

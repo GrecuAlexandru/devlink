@@ -2,6 +2,7 @@ import { memo } from "react";
 import { useParams } from "react-router-dom";
 import { useOwnUser } from "@/infrastructure/hooks/useOwnUser";
 import { useGetUserProfile } from "@/infrastructure/apis/api-management/profile";
+import { useGetUser } from "@/infrastructure/apis/api-management/user";
 import { useProfileFormController } from "@/presentation/components/forms/ProfileView/ProfileForm.controller";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,10 +51,9 @@ const OwnProfileView = () => {
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       <Card className="overflow-hidden border-border/70 bg-card/90 shadow-sm">
-        <div className="h-14 border-b bg-muted/40" />
-        <CardContent className="relative -mt-8 flex flex-col gap-4 px-6 pb-6 pt-0 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex items-end gap-4">
-            <Avatar className="h-24 w-24 border-4 border-background bg-muted shadow-sm">
+        <CardContent className="flex flex-col gap-4 px-6 pb-6 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-24 w-24 bg-muted shadow-sm">
               <AvatarFallback className="text-xl font-semibold text-primary">
                 {user?.name?.charAt(0).toUpperCase() ?? "U"}
               </AvatarFallback>
@@ -103,24 +103,8 @@ const OwnProfileView = () => {
                     <Input id="name" {...actions.register("name")} disabled={computed.isSubmitting} />
                     {state.errors.name && <p className="text-sm text-destructive">{state.errors.name.message}</p>}
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="bio">Headline</Label>
-                    <Input id="bio" {...actions.register("bio")} disabled={computed.isSubmitting} placeholder="Software Developer at..." />
-                    {state.errors.bio && <p className="text-sm text-destructive">{state.errors.bio.message}</p>}
-                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="bioDetails">About you</Label>
-                  <Textarea
-                    id="bioDetails"
-                    {...actions.register("bio")}
-                    disabled={computed.isSubmitting}
-                    placeholder="Tell people what you are currently focused on."
-                    className="min-h-28"
-                  />
-                </div>
               </TabsContent>
 
               <TabsContent value="links" className="space-y-4">
@@ -154,13 +138,15 @@ const OwnProfileView = () => {
 };
 
 const OtherProfileView = ({ userId }: { userId: string }) => {
-  const { data: profileData, isLoading } = useGetUserProfile(userId);
+  const { data: profileData, isLoading: isLoadingProfile } = useGetUserProfile(userId);
+  const { data: userData, isLoading: isLoadingUser } = useGetUser(userId);
   const profile = profileData?.response;
+  const user = userData?.response;
 
-  const displayName = profile?.userId ? `Member ${profile.userId.slice(0, 8)}` : "Developer";
+  const displayName = user?.name || (profile?.userId ? `Member ${profile.userId.slice(0, 8)}` : "Developer");
   const profileInitial = displayName.charAt(0).toUpperCase();
 
-  if (isLoading) {
+  if (isLoadingProfile || isLoadingUser) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-8">
         <Card>
@@ -177,16 +163,15 @@ const OtherProfileView = ({ userId }: { userId: string }) => {
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       <Card className="overflow-hidden border-border/70 bg-card/90 shadow-sm">
-        <div className="h-14 border-b bg-muted/40" />
-        <CardContent className="relative -mt-8 flex flex-col gap-4 px-6 pb-6 pt-0 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex items-end gap-4">
-            <Avatar className="h-24 w-24 border-4 border-background bg-muted shadow-sm">
+        <CardContent className="flex flex-col gap-4 px-6 pb-6 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-24 w-24 bg-muted shadow-sm">
               <AvatarFallback className="text-xl font-semibold text-primary">{profileInitial}</AvatarFallback>
             </Avatar>
 
             <div className="space-y-1">
               <h1 className="text-2xl font-bold tracking-tight">{displayName}</h1>
-              <p className="text-sm text-muted-foreground">{profile?.bio || "DevLink member"}</p>
+              <p className="text-sm text-muted-foreground">DevLink member</p>
             </div>
           </div>
 
@@ -200,7 +185,7 @@ const OtherProfileView = ({ userId }: { userId: string }) => {
           <CardDescription>Professional links and profile summary.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {profile?.bio ? <p className="text-sm leading-relaxed text-muted-foreground">{profile.bio}</p> : <p className="text-sm text-muted-foreground">No additional details available.</p>}
+          <p className="text-sm text-muted-foreground">No additional details available.</p>
           <Separator />
 
           <div className="flex flex-wrap gap-3">

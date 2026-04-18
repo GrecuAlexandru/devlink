@@ -43,8 +43,6 @@ public class CompanyService(IRepository<WebAppDatabaseContext> repository) : ICo
         {
             Id = result.Id,
             Name = result.Name,
-            Industry = result.Industry,
-            Website = result.Website,
             Description = result.Description
         });
     }
@@ -65,8 +63,6 @@ public class CompanyService(IRepository<WebAppDatabaseContext> repository) : ICo
         var newCompany = new Company
         {
             Name = company.Name,
-            Industry = company.Industry,
-            Website = company.Website,
             Description = company.Description
         };
 
@@ -106,8 +102,6 @@ public class CompanyService(IRepository<WebAppDatabaseContext> repository) : ICo
         }
 
         entity.Name = company.Name ?? entity.Name;
-        entity.Industry = company.Industry ?? entity.Industry;
-        entity.Website = company.Website ?? entity.Website;
         entity.Description = company.Description ?? entity.Description;
 
         await repository.UpdateAsync(entity, cancellationToken);

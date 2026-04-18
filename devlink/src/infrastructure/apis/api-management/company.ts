@@ -4,7 +4,7 @@ const basePath = import.meta.env.VITE_APP_API_BASE_URL || "http://localhost:5000
 
 export const useCreateCompany = () => {
   return useMutation({
-    mutationFn: async (data: { name: string; industry: string; website?: string; description?: string }) => {
+    mutationFn: async (data: { name: string; description: string }) => {
       const token = localStorage.getItem("token");
       const response = await fetch(`${basePath}/api/Company/Add`, {
         method: "POST",

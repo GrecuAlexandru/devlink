@@ -18,12 +18,8 @@ public class JobPostConfiguration : IEntityTypeConfiguration<JobPost>
             .HasMaxLength(5000);
         builder.Property(e => e.Location)
             .HasMaxLength(255);
-        builder.Property(e => e.SalaryRange)
-            .HasMaxLength(100);
-        builder.Property(e => e.Level)
-            .HasMaxLength(100);
-        builder.Property(e => e.Type)
-            .HasMaxLength(100);
+        builder.Property(e => e.Salary)
+            .IsRequired(false);
         builder.Property(e => e.CreatedAt)
             .IsRequired();
         builder.Property(e => e.UpdatedAt)

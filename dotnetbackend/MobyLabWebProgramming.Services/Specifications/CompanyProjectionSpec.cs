@@ -10,8 +10,6 @@ public sealed class CompanyProjectionSpec : Specification<Company, CompanyRecord
     {
         Id = e.Id,
         Name = e.Name,
-        Industry = e.Industry,
-        Website = e.Website,
         Description = e.Description
     });
 
