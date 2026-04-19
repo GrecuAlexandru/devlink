@@ -19,7 +19,6 @@
  */
 export const UserRoleEnum = {
     Admin: 'Admin',
-    Personnel: 'Personnel',
     Client: 'Client',
     CompanyAdmin: 'CompanyAdmin',
     Recruiter: 'Recruiter'
