@@ -52,17 +52,6 @@ export function ProfileView({ className }: React.ComponentProps<"div">) {
               {state.errors.bio && <p className="text-sm text-destructive">{state.errors.bio.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="profilePictureUrl">Profile Picture URL</Label>
-              <Input
-                id="profilePictureUrl"
-                type="url"
-                placeholder="https://example.com/photo.jpg"
-                {...actions.register("profilePictureUrl")}
-                disabled={computed.isSubmitting}
-              />
-              {state.errors.profilePictureUrl && <p className="text-sm text-destructive">{state.errors.profilePictureUrl.message}</p>}
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="linkedInUrl">LinkedIn URL</Label>
               <Input
                 id="linkedInUrl"

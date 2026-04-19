@@ -5,41 +5,6 @@
 /// </summary>
 public static class MailTemplates
 {
-    public static string UserAddTemplate(string name) => $@"<!DOCTYPE html>
-<html lang=""en"" xmlns=""http://www.w3.org/1999/xhtml"">
-<head>
-    <meta charset=""utf-8"" />
-    <title>Mail</title>
-    <style type=""text/css"">
-        p {{
-            margin: 0 0 5px 0;
-        }}
-    </style>
-</head>
-<body>
-    <table style=""border: none; height: 48px;"" border=""0"" width=""676"" cellspacing=""0"" cellpadding=""10"" align=""center"" bgcolor=""#FFFFFF"">
-        <tbody>
-            <tr style=""height: 19px;"">
-                <td style=""background: #ffffff; color: #000000; width: 660px; height: 19px;"" align=""left"" valign=""top"" bgcolor=""#ffffff"">
-                    <p style=""font-size: 15px; margin: 0px; color: #003373; letter-spacing: 0.5px;""><strong> Dear mr./ms. {name},</strong></p>
-                </td>
-            </tr>
-            <tr style=""height: 102px;"">
-                <td style=""background: #ffffff; color: #000000; height: 29px; width: 660px;"" align=""center"" valign=""top"" bgcolor=""#ffffff"">
-                    <table style=""border-top: 2px solid #3c87be; width: 660px;"" border=""0"" cellspacing=""0"" cellpadding=""0"">
-                        <tbody>
-                            <tr>
-                                <td>Welcome to My App!</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</body>
-</html>";
-
     public static string ApplicationStatusTemplate(string name, string jobTitle, string status) => $@"<!DOCTYPE html>
 <html lang=""en"" xmlns=""http://www.w3.org/1999/xhtml"">
 <head>
@@ -65,47 +30,6 @@ public static class MailTemplates
                         <tbody>
                             <tr>
                                 <td>Your application for <strong>{jobTitle}</strong> has been <strong>{status}</strong>.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</body>
-</html>";
-
-    public static string NewMemberTemplate(string ownerName, string memberName, string companyName, string role) => $@"<!DOCTYPE html>
-<html lang=""en"" xmlns=""http://www.w3.org/1999/xhtml"">
-<head>
-    <meta charset=""utf-8"" />
-    <title>New Company Member</title>
-    <style type=""text/css"">
-        p {{
-            margin: 0 0 5px 0;
-        }}
-    </style>
-</head>
-<body>
-    <table style=""border: none; height: 48px;"" border=""0"" width=""676"" cellspacing=""0"" cellpadding=""10"" align=""center"" bgcolor=""#FFFFFF"">
-        <tbody>
-            <tr style=""height: 19px;"">
-                <td style=""background: #ffffff; color: #000000; width: 660px; height: 19px;"" align=""left"" valign=""top"" bgcolor=""#ffffff"">
-                    <p style=""font-size: 15px; margin: 0px; color: #003373; letter-spacing: 0.5px;""><strong> Dear mr./ms. {ownerName},</strong></p>
-                </td>
-            </tr>
-            <tr style=""height: 102px;"">
-                <td style=""background: #ffffff; color: #000000; height: 29px; width: 660px;"" align=""center"" valign=""top"" bgcolor=""#ffffff"">
-                    <table style=""border-top: 2px solid #3c87be; width: 660px;"" border=""0"" cellspacing=""0"" cellpadding=""0"">
-                        <tbody>
-                            <tr>
-                                <td>A new member has joined your company <strong>{companyName}</strong>.</td>
-                            </tr>
-                            <tr>
-                                <td>Name: <strong>{memberName}</strong></td>
-                            </tr>
-                            <tr>
-                                <td>Role: <strong>{role}</strong></td>
                             </tr>
                         </tbody>
                     </table>

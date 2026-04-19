@@ -104,7 +104,11 @@ const OwnProfileView = () => {
                     {state.errors.name && <p className="text-sm text-destructive">{state.errors.name.message}</p>}
                   </div>
                 </div>
-
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea id="bio" {...actions.register("bio")} disabled={computed.isSubmitting} placeholder="Tell us about yourself..." className="resize-none h-32" />
+                  {state.errors.bio && <p className="text-sm text-destructive">{state.errors.bio.message}</p>}
+                </div>
               </TabsContent>
 
               <TabsContent value="links" className="space-y-4">
@@ -185,7 +189,13 @@ const OtherProfileView = ({ userId }: { userId: string }) => {
           <CardDescription>Professional links and profile summary.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">No additional details available.</p>
+          <div className="text-sm">
+            {profile?.bio ? (
+              <p className="whitespace-pre-wrap">{profile.bio}</p>
+            ) : (
+              <p className="text-muted-foreground">No additional details available.</p>
+            )}
+          </div>
           <Separator />
 
           <div className="flex flex-wrap gap-3">

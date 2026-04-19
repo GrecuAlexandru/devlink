@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, MapPin, DollarSign, Briefcase, CheckCircle, Users, ChevronDown, ChevronUp, Building2, ExternalLink, FileText, UserRound } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin, DollarSign, Users, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
@@ -25,11 +25,6 @@ type JobFormModel = {
   location?: string;
   salary?: number;
   isRecruiterPosition?: boolean;
-};
-
-type ApplyFormModel = {
-  coverLetter?: string;
-  expectedSalary?: string;
 };
 
 const JOBS_PAGE_SIZE = 6;
@@ -216,12 +211,15 @@ const CompanyJobsView = () => {
 const UserJobsView = () => {
   const { data: jobsData, isLoading } = useGetAllJobs();
   const { data: applicationsData } = useGetMyApplications();
+
   const jobs = jobsData?.response ?? [];
   const applications = applicationsData?.response ?? [];
+
   const appliedJobIds = useMemo(() => new Set(applications.map((a: { jobPostId: string }) => a.jobPostId)), [applications]);
   const [applyingJob, setApplyingJob] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
+
   const jobsById = useMemo(() => {
     const map = new Map<string, any>();
     for (const job of jobs) {
@@ -269,8 +267,7 @@ const UserJobsView = () => {
     <div className="mx-auto max-w-6xl px-4 py-8">
       <Card className="mb-6 border-border/70 bg-card/90 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Find Your Next Role</CardTitle>
-          <CardDescription>Browse roles with full context: company, responsibilities, and requirements.</CardDescription>
+          <CardTitle className="text-2xl">Jobs</CardTitle>
         </CardHeader>
       </Card>
 
@@ -286,7 +283,7 @@ const UserJobsView = () => {
         <>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Input
-              placeholder="Search jobs by title, company, location, type..."
+              placeholder="Search jobs by title, company, location..."
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               className="sm:max-w-lg"
@@ -336,7 +333,6 @@ const UserJobsView = () => {
                               </>
                             )}
                           </div>
-                          
                           <div className="mt-4 flex flex-wrap gap-2">
                             {job.company?.industry && <Badge variant="secondary">{job.company.industry}</Badge>}
                             {job.isRecruiterPosition && <Badge variant="secondary">Recruiter Position</Badge>}
@@ -460,8 +456,6 @@ const JobForm = ({ job, isCompanyAdmin, onSuccess }: { job?: { id: string; title
     },
     resolver: yupResolver(schema),
   });
-
-  const isRecruiterPosition = watch("isRecruiterPosition");
 
   useEffect(() => {
     if (job) {
@@ -594,7 +588,7 @@ const DeleteJobButton = ({ id }: { id: string }) => {
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete this job posting. This action cannot be undone.
+            This will permanently delete this job posting.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -669,8 +663,8 @@ const JobApplicationsView = ({ jobPostId }: { jobPostId: string }) => {
                   <div className="ml-2 flex items-center gap-2">
                     {app.status === "InProgress" || app.status === "Pending" || app.status === "Interview" ? (
                       <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="default"
                           className="bg-green-600 hover:bg-green-700 h-8"
                           onClick={() => handleStatusChange(app.id, "Accepted")}
@@ -678,8 +672,8 @@ const JobApplicationsView = ({ jobPostId }: { jobPostId: string }) => {
                         >
                           Approve
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="destructive"
                           className="h-8"
                           onClick={() => handleStatusChange(app.id, "Rejected")}

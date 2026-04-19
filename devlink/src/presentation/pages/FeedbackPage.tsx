@@ -84,12 +84,11 @@ export const FeedbackPage = memo(() => {
         <Card className="w-full">
           <CardHeader>
             <CardTitle>Feedback</CardTitle>
-            <CardDescription>Help us improve DevLink by sharing your thoughts.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label>How would you rate the quality of jobs posted on DevLink?</Label>
+                <Label>What do you think of the jobs here?</Label>
                 <select
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={quality}
@@ -102,7 +101,7 @@ export const FeedbackPage = memo(() => {
               </div>
 
               <div className="space-y-2">
-                <Label>Would you recommend this platform to other developers?</Label>
+                <Label>Would you recommend us to other devs?</Label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2">
                     <input
@@ -132,11 +131,11 @@ export const FeedbackPage = memo(() => {
                   checked={allowContact}
                   onChange={(event) => setAllowContact(event.target.checked)}
                 />
-                <Label htmlFor="contact">I agree to be contacted by the team for follow-up details.</Label>
+                <Label htmlFor="contact">Did you get a job using our website?</Label>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="suggestions">Describe a feature you would like us to add</Label>
+                <Label htmlFor="suggestions">What should we add next?</Label>
                 <textarea
                   id="suggestions"
                   className="flex min-h-25 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"

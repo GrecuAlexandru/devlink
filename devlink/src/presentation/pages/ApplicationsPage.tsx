@@ -65,7 +65,6 @@ export const ApplicationsPage = memo(() => {
       <Card>
         <CardHeader>
           <CardTitle>My Applications</CardTitle>
-          <CardDescription>Track your job applications with search and pagination.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

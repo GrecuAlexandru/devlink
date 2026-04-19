@@ -1,12 +1,12 @@
 import { memo, useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { useGetMyCompany, useUpdateCompany, useGetCompanyMembers, useAddCompanyMember, useRemoveCompanyMember, useGetCompanyById, useGetCompanyMembersById } from "@/infrastructure/apis/api-management/company";
+import { useGetMyCompany, useUpdateCompany, useRemoveCompanyMember, useGetCompanyById, useGetCompanyMembersById } from "@/infrastructure/apis/api-management/company";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Globe, Briefcase, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Building2, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
@@ -17,8 +17,6 @@ import { useOwnUser } from "@/infrastructure/hooks/useOwnUser";
 
 type CompanyFormModel = {
   name: string;
-  
-  
   description?: string;
 };
 
@@ -114,8 +112,6 @@ const CompanyDetailsCard = ({ company, isReadonly }: { company: any; isReadonly:
   } = useForm<CompanyFormModel>({
     defaultValues: {
       name: company?.name || "",
-      
-      
       description: company?.description || "",
     },
     resolver: yupResolver(schema),
@@ -125,8 +121,6 @@ const CompanyDetailsCard = ({ company, isReadonly }: { company: any; isReadonly:
     if (company) {
       reset({
         name: company.name || "",
-        
-        
         description: company.description || "",
       });
     }

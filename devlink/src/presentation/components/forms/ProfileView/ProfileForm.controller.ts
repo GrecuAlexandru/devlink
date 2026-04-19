@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 
 export type ProfileFormModel = {
   name: string;
-  
+  bio?: string;
   linkedInUrl?: string;
   gitHubUrl?: string;
 };
@@ -16,17 +16,17 @@ export type ProfileFormModel = {
 const useInitProfileForm = (initialData?: ProfileFormModel) => {
   const defaultValues: ProfileFormModel = {
     name: initialData?.name || "",
-    
+    bio: initialData?.bio || "",
     linkedInUrl: initialData?.linkedInUrl || "",
     gitHubUrl: initialData?.gitHubUrl || "",
   };
 
   const schema = yup.object().shape({
     name: yup.string().required("Name is required!").min(2, "Name must be at least 2 characters!"),
-    
-    linkedInUrl: yup.string().url("Invalid URL format!"),
-    gitHubUrl: yup.string().url("Invalid URL format!"),
-  });
+    bio: yup.string().max(500, "Bio is too long").optional(),
+    linkedInUrl: yup.string().url("Invalid URL format!").optional(),
+    gitHubUrl: yup.string().url("Invalid URL format!").optional(),
+  }) as unknown as yup.ObjectSchema<ProfileFormModel>;
 
   const resolver = yupResolver(schema);
   return { defaultValues, resolver };
@@ -59,7 +59,7 @@ export const useProfileFormController = (): ProfileFormController => {
 
   const initialData: ProfileFormModel = {
     name: user?.name || "",
-    
+    bio: profileData?.response?.bio || "",
     linkedInUrl: profileData?.response?.linkedInUrl || "",
     gitHubUrl: profileData?.response?.gitHubUrl || "",
   };
@@ -80,7 +80,7 @@ export const useProfileFormController = (): ProfileFormController => {
     if (user || profileData?.response) {
       reset({
         name: user?.name || "",
-        
+        bio: profileData?.response?.bio || "",
         linkedInUrl: profileData?.response?.linkedInUrl || "",
         gitHubUrl: profileData?.response?.gitHubUrl || "",
       });
@@ -97,16 +97,16 @@ export const useProfileFormController = (): ProfileFormController => {
         if (profileId) {
           await updateProfile({
             id: profileId,
-            
-            linkedInUrl: data.linkedInUrl,
-            gitHubUrl: data.gitHubUrl,
+            bio: data.bio || undefined,
+            linkedInUrl: data.linkedInUrl || undefined,
+            gitHubUrl: data.gitHubUrl || undefined,
           });
         } else if (userId) {
           await updateProfile({
             id: userId,
-            
-            linkedInUrl: data.linkedInUrl,
-            gitHubUrl: data.gitHubUrl,
+            bio: data.bio || undefined,
+            linkedInUrl: data.linkedInUrl || undefined,
+            gitHubUrl: data.gitHubUrl || undefined,
           });
         }
 
@@ -115,7 +115,7 @@ export const useProfileFormController = (): ProfileFormController => {
         toast.error((error as Error)?.message || "Failed to update profile!");
       }
     },
-    [updateProfile, updateUser, profileId, userId, user?.name]
+    [updateProfile, updateUser, profileId, userId, user]
   );
 
   return {

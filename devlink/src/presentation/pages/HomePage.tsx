@@ -1,10 +1,7 @@
 import { memo } from "react";
-import { Link } from "react-router-dom";
 import { useAppSelector } from "@/application/store";
 import { FeedPage } from "@/presentation/pages/FeedPage";
-import { AppRoute } from "@/routes";
-import { Button } from "@/components/ui/button";
-import { Briefcase, Users, Building, MessageSquare } from "lucide-react";
+import { Briefcase, Users, Building } from "lucide-react";
 
 export const HomePage = memo(() => {
   const { loggedIn } = useAppSelector((x) => x.profileReducer);
@@ -23,15 +20,15 @@ export const HomePage = memo(() => {
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 py-8">
-          <div className="flex flex-col items-center space-y-2 p-6 bg-card rounded-xl border shadow-sm">
+          <div className="flex flex-col items-center space-y-2 p-6">
             <Users className="h-10 w-10 text-primary" />
             <h3 className="font-semibold text-lg">Connect</h3>
           </div>
-          <div className="flex flex-col items-center space-y-2 p-6 bg-card rounded-xl border shadow-sm">
+          <div className="flex flex-col items-center space-y-2 p-6">
             <Briefcase className="h-10 w-10 text-primary" />
             <h3 className="font-semibold text-lg">Find Jobs</h3>
           </div>
-          <div className="flex flex-col items-center space-y-2 p-6 bg-card rounded-xl border shadow-sm">
+          <div className="flex flex-col items-center space-y-2 p-6">
             <Building className="h-10 w-10 text-primary" />
             <h3 className="font-semibold text-lg">Companies</h3>
           </div>
